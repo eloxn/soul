@@ -25,6 +25,7 @@ import app.simple.felicity.preferences.EqualizerPreferences
 import app.simple.felicity.preferences.LibraryPreferences
 import app.simple.felicity.preferences.PlayerPreferences
 import app.simple.felicity.preferences.UserInterfacePreferences
+import app.simple.felicity.preferences.VisualizerPreferences
 import app.simple.felicity.repository.repositories.SongStatRepository
 import app.simple.felicity.repository.services.AudioDatabaseService
 import app.simple.felicity.theme.accents.AlbumArt
@@ -1414,6 +1415,19 @@ abstract class PreferenceFragment : MediaFragment() {
                 }
         )
 
+        val batterySaver3d = Preference(
+                title = R.string.battery_saver_3d,
+                summary = R.string.battery_saver_3d_summary,
+                icon = R.drawable.ic_equalizer_16dp,
+                type = PreferenceType.SWITCH,
+                onPreferenceAction = { view, _ ->
+                    VisualizerPreferences.set3dBatterySaverEnabled((view as FelicitySwitch).isChecked)
+                },
+                valueProvider = Supplier {
+                    VisualizerPreferences.is3dBatterySaverEnabled()
+                }
+        )
+
         preferences.add(userInterfaceHeader)
         preferences.add(divider)
         preferences.add(highlightClickedElement)
@@ -1423,6 +1437,7 @@ abstract class PreferenceFragment : MediaFragment() {
         preferences.add(darkerMiniplayerShadow)
         preferences.add(animationsHeader)
         preferences.add(reduceAnimations)
+        preferences.add(batterySaver3d)
 
         return preferences
     }

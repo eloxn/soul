@@ -47,6 +47,14 @@
             </LinearLayout>
 
             <app.simple.felicity.decorations.ripple.DynamicRippleImageButton
+                android:id="@+id/share_card"
+                android:layout_width="@dimen/button_size"
+                android:layout_height="@dimen/button_size"
+                android:src="@drawable/ic_image"
+                android:layout_gravity="center_vertical"
+                app:buttonTintType="regular" />
+
+            <app.simple.felicity.decorations.ripple.DynamicRippleImageButton
                 android:id="@+id/add_lyrics"
                 android:layout_width="@dimen/button_size"
                 android:layout_height="@dimen/button_size"

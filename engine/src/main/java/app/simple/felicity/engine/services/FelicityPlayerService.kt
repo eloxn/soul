@@ -826,7 +826,7 @@ class FelicityPlayerService : MediaLibraryService(), SharedPreferences.OnSharedP
 
         return try {
             raw.trim()
-                .replace(Regex("(?i)\\s*dB$"), "")
+                .replace(Regex("(?i)\\s*(dB|LUFS|LU)$"), "")
                 .trim()
                 .toFloat()
         } catch (_: NumberFormatException) {

@@ -10,6 +10,7 @@ import app.simple.felicity.R
 import app.simple.felicity.databinding.DialogLyricsBinding
 import app.simple.felicity.decorations.lrc.view.FelicityLrcView
 import app.simple.felicity.dialogs.lyrics.AddLyrics.Companion.showAddLyrics
+import app.simple.felicity.dialogs.lyrics.LyricsCardDialog.Companion.showLyricsCard
 import app.simple.felicity.engine.managers.MediaPlaybackManager
 import app.simple.felicity.extensions.dialogs.MediaBottomDialogFragment
 import app.simple.felicity.managers.LyricsLoadingStatus
@@ -80,6 +81,11 @@ class Lyrics : MediaBottomDialogFragment(), AddLyrics.Companion.OnLyricsCreatedL
                 is LyricsLoadingStatus.Idle -> getString(R.string.no_lyrics_found)
             }
             binding.lrcView.setEmptyText(message)
+        }
+
+        binding.shareCard.setOnClickListener {
+            parentFragmentManager.showLyricsCard()
+            dismiss()
         }
 
         binding.addLyrics.setOnClickListener {

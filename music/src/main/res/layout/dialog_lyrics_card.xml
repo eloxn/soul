@@ -16,28 +16,47 @@
         android:orientation="vertical"
         android:padding="@dimen/padding_15">
 
-        <app.simple.felicity.decorations.typeface.TypeFaceTextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/share_lyrics_card"
-            android:textSize="@dimen/text_size_18"
-            android:paddingBottom="@dimen/padding_10"
-            app:appFontStyle="bold"
-            app:textColorStyle="primary" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="@dimen/padding_10">
+
+            <app.simple.felicity.decorations.typeface.TypeFaceTextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="@string/share_lyrics_card"
+                android:textSize="@dimen/text_size_18"
+                app:appFontStyle="bold"
+                app:textColorStyle="primary" />
+
+            <app.simple.felicity.decorations.ripple.DynamicRippleTextView
+                android:id="@+id/select_stanza_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/padding_10"
+                android:text="@string/select_stanza"
+                android:textSize="@dimen/text_size_12"
+                app:appFontStyle="bold"
+                app:textColorStyle="accent" />
+
+        </LinearLayout>
 
         <ImageView
             android:id="@+id/card_preview"
             android:layout_width="match_parent"
             android:layout_height="280dp"
             android:layout_gravity="center_horizontal"
-            android:background="#222222"
+            android:background="#111115"
             android:scaleType="fitCenter" />
 
         <app.simple.felicity.decorations.typeface.TypeFaceTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="@dimen/padding_10"
-            android:text="Tap to select 2 to 4 lines:"
+            android:text="Select up to 4 lines for card:"
             android:textSize="@dimen/text_size_12"
             app:appFontStyle="medium"
             app:textColorStyle="secondary" />
@@ -45,14 +64,14 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/lines_recycler"
             android:layout_width="match_parent"
-            android:layout_height="140dp"
+            android:layout_height="120dp"
             android:paddingVertical="@dimen/padding_5" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingTop="@dimen/padding_10">
+            android:paddingTop="@dimen/padding_5">
 
             <app.simple.felicity.decorations.ripple.DynamicRippleTextView
                 android:id="@+id/style_toggle"
@@ -60,25 +79,37 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:padding="@dimen/padding_15"
-                android:text="Style: Glass"
+                android:padding="@dimen/padding_10"
+                android:text="Backdrop: Glass"
+                android:textSize="@dimen/text_size_12"
                 app:appFontStyle="bold"
                 app:textColorStyle="primary" />
 
             <app.simple.felicity.decorations.ripple.DynamicRippleTextView
-                android:id="@+id/share_button"
+                android:id="@+id/typography_toggle"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:padding="@dimen/padding_15"
-                android:text="Share Card"
+                android:padding="@dimen/padding_10"
+                android:text="Font: Sans Bold"
+                android:textSize="@dimen/text_size_12"
                 app:appFontStyle="bold"
-                app:textColorStyle="accent" />
+                app:textColorStyle="primary" />
 
         </LinearLayout>
+
+        <app.simple.felicity.decorations.ripple.DynamicRippleTextView
+            android:id="@+id/share_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginTop="@dimen/padding_10"
+            android:padding="@dimen/padding_15"
+            android:text="@string/share_lyrics_card"
+            app:appFontStyle="bold"
+            app:textColorStyle="accent" />
 
     </app.simple.felicity.decorations.corners.DynamicCornerLinearLayout>
 
 </FrameLayout>
-

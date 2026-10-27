@@ -52,7 +52,9 @@ class LyricsCardDialog : MediaBottomDialogFragment() {
     private val selectedLines = mutableListOf<String>()
     private var allLines = listOf<String>()
     private var currentStyleIndex = 0
-    private val styles = listOf("Glass Blur", "OLED Dark", "Cosmic Violet")
+    private val styles = listOf("Glass Blur", "OLED Dark", "Cosmic Violet", "3D Neon Horizon", "Minimalist Editorial")
+    private var currentTypefaceIndex = 0
+    private val typefaceStyles = listOf("Sans Bold", "Elegant Serif", "Cyber Mono", "Minimal Sans")
     private var coverBitmap: Bitmap? = null
     private var generatedCardBitmap: Bitmap? = null
 
@@ -130,11 +132,33 @@ class LyricsCardDialog : MediaBottomDialogFragment() {
     }
 
     private fun setupButtons() {
-        binding.styleToggle.text = "Style: ${styles[currentStyleIndex]}"
+        binding.styleToggle.text = "Backdrop: ${styles[currentStyleIndex]}"
         binding.styleToggle.setOnClickListener {
             currentStyleIndex = (currentStyleIndex + 1) % styles.size
-            binding.styleToggle.text = "Style: ${styles[currentStyleIndex]}"
+            binding.styleToggle.text = "Backdrop: ${styles[currentStyleIndex]}"
             renderCard()
+        }
+
+        binding.typographyToggle.text = "Font: ${typefaceStyles[currentTypefaceIndex]}"
+        binding.typographyToggle.setOnClickListener {
+            currentTypefaceIndex = (currentTypefaceIndex + 1) % typefaceStyles.size
+            binding.typographyToggle.text = "Font: ${typefaceStyles[currentTypefaceIndex]}"
+            renderCard()
+        }
+
+        binding.selectStanzaButton.setOnClickListener {
+            val currentPos = MediaPlaybackManager.songSeekPositionFlow.value
+            val lrc = LyricsManager.activeLrcDataFlow.value
+            val entries = lrc?.entries ?: emptyList()
+            if (entries.isNotEmpty()) {
+                val activeIdx = entries.indexOfLast { it.timeInMillis <= currentPos }.coerceAtLeast(0)
+                val start = activeIdx.coerceIn(0, (allLines.size - 3).coerceAtLeast(0))
+                selectedLines.clear()
+                selectedLines.addAll(allLines.drop(start).take(3))
+                binding.linesRecycler.adapter?.notifyDataSetChanged()
+                renderCard()
+                Toast.makeText(requireContext(), "Selected current stanza", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.shareButton.setOnClickListener {
@@ -156,6 +180,20 @@ class LyricsCardDialog : MediaBottomDialogFragment() {
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
 
+            val isLightEditorial = currentStyleIndex == 4
+            val primaryTextColor = if (isLightEditorial) 0xFF18181B.toInt() else Color.WHITE
+            val secondaryTextColor = if (isLightEditorial) 0xFF52525B.toInt() else 0xAAFFFFFF.toInt()
+            val quoteColor = if (isLightEditorial) 0x3318181B.toInt() else 0x44FFFFFF.toInt()
+            val borderColor = if (isLightEditorial) 0x3318181B.toInt() else 0x26FFFFFF.toInt()
+
+            val selectedTypeface = when (currentTypefaceIndex) {
+                0 -> Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                1 -> Typeface.create(Typeface.SERIF, Typeface.BOLD)
+                2 -> Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                3 -> Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+                else -> Typeface.DEFAULT_BOLD
+            }
+
             // Draw Background according to current style
             val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
             when (currentStyleIndex) {
@@ -166,7 +204,6 @@ class LyricsCardDialog : MediaBottomDialogFragment() {
                     } else {
                         canvas.drawColor(0xFF1E1E24.toInt())
                     }
-                    // Dark Frosted Overlay
                     val overlay = Paint().apply {
                         shader = LinearGradient(
                                 0f, 0f, 0f, height.toFloat(),
@@ -176,7 +213,7 @@ class LyricsCardDialog : MediaBottomDialogFragment() {
                     }
                     canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), overlay)
                 }
-                1 -> { // OLED Dark
+                1 -> { // OLED Pure Dark
                     canvas.drawColor(0xFF000000.toInt())
                     val accentGradient = Paint().apply {
                         shader = LinearGradient(
@@ -197,12 +234,50 @@ class LyricsCardDialog : MediaBottomDialogFragment() {
                     }
                     canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), gradient)
                 }
+                3 -> { // 3D Neon Horizon (Perspective Grid)
+                    val skyGradient = Paint().apply {
+                        shader = LinearGradient(
+                                0f, 0f, 0f, height.toFloat(),
+                                intArrayOf(0xFF0F0426.toInt(), 0xFF35063D.toInt(), 0xFF120321.toInt()),
+                                floatArrayOf(0f, 0.65f, 1f),
+                                Shader.TileMode.CLAMP
+                        )
+                    }
+                    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), skyGradient)
+
+                    // 3D Perspective Grid
+                    val horizonY = height * 0.65f
+                    val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = 0x33FF007F.toInt()
+                        strokeWidth = 2f
+                    }
+                    // Converging perspective lines
+                    val vanishingX = width / 2f
+                    for (gx in -200..width.toInt() + 200 step 80) {
+                        canvas.drawLine(vanishingX, horizonY, gx.toFloat(), height.toFloat(), gridPaint)
+                    }
+                    // Horizontal depth slices
+                    for (step in 1..8) {
+                        val fraction = (step.toFloat() / 8f) * (step.toFloat() / 8f)
+                        val gy = horizonY + (height - horizonY) * fraction
+                        canvas.drawLine(0f, gy, width.toFloat(), gy, gridPaint)
+                    }
+                }
+                4 -> { // Minimalist Editorial Ivory
+                    canvas.drawColor(0xFFF5F2EB.toInt())
+                    val paperBorder = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = 0x11000000.toInt()
+                        strokeWidth = 2f
+                        style = Paint.Style.STROKE
+                    }
+                    canvas.drawRect(40f, 40f, (width - 40).toFloat(), (height - 40).toFloat(), paperBorder)
+                }
             }
 
             // Draw Card Container
             val cardRect = RectF(80f, 100f, (width - 80).toFloat(), (height - 120).toFloat())
             val cardPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0x26FFFFFF.toInt()
+                color = borderColor
                 style = Paint.Style.STROKE
                 strokeWidth = 3f
             }
@@ -210,17 +285,17 @@ class LyricsCardDialog : MediaBottomDialogFragment() {
 
             // Draw Quote Marks
             val quotePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0x44FFFFFF.toInt()
+                color = quoteColor
                 textSize = 140f
                 typeface = Typeface.DEFAULT_BOLD
             }
             canvas.drawText("“", 140f, 260f, quotePaint)
 
-            // Draw Lyrics
+            // Draw Lyrics with Selected Typography
             val lyricsPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.WHITE
+                color = primaryTextColor
                 textSize = if (lines.size <= 2) 58f else 46f
-                typeface = Typeface.DEFAULT_BOLD
+                typeface = selectedTypeface
             }
 
             val lyricsBlock = lines.joinToString("\n\n")
@@ -235,14 +310,14 @@ class LyricsCardDialog : MediaBottomDialogFragment() {
 
             // Draw Track & Artist Information
             val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.WHITE
+                color = primaryTextColor
                 textSize = 38f
                 typeface = Typeface.DEFAULT_BOLD
             }
             canvas.drawText(song.getProperTitle(), 140f, (height - 240).toFloat(), titlePaint)
 
             val artistPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0xAAFFFFFF.toInt()
+                color = secondaryTextColor
                 textSize = 30f
                 typeface = Typeface.DEFAULT
             }
@@ -250,7 +325,7 @@ class LyricsCardDialog : MediaBottomDialogFragment() {
 
             // Soul Watermark / Branding
             val badgePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0x88FFFFFF.toInt()
+                color = secondaryTextColor
                 textSize = 26f
                 typeface = Typeface.DEFAULT_BOLD
                 textAlign = Paint.Align.RIGHT

@@ -42,6 +42,11 @@ class VisualizerConfig : MediaBottomDialogFragment() {
         binding.capsToggle.setOnCheckedChangeListener { _, isChecked ->
             VisualizerPreferences.setCapsEnabled(isChecked)
         }
+
+        binding.batterySaverToggle.isChecked = VisualizerPreferences.is3dBatterySaverEnabled()
+        binding.batterySaverToggle.setOnCheckedChangeListener { _, isChecked ->
+            VisualizerPreferences.set3dBatterySaverEnabled(isChecked)
+        }
     }
 
     fun updateVizStyleState() {

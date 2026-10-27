@@ -565,4 +565,9 @@
     <string name="lock_screen_lyrics">Lock Screen / AOD Lyrics</string>
     <string name="lock_screen_lyrics_summary">Render a battery-friendly monochrome lyrics preview on the lock screen and ambient display.</string>
     <string name="off">Off</string>
+    <string name="battery_saver_3d">3D Battery Saver</string>
+    <string name="battery_saver_3d_summary">Cap 3D rendering at 30 FPS and lower viewport resolution to reduce power draw.</string>
+    <string name="typography">Typography</string>
+    <string name="select_stanza">Select Stanza</string>
+    <string name="backdrop">Backdrop</string>
 </resources>

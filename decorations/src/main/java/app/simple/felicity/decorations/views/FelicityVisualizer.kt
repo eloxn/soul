@@ -9,7 +9,13 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Shader
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.os.PowerManager
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.withStyledAttributes
 import app.simple.felicity.decoration.R
@@ -253,6 +259,21 @@ class FelicityVisualizer @JvmOverloads constructor(
 
     /** Live list of active particles, updated and rendered inside each [onDraw] call. */
     private val particles = ArrayList<Particle>(MAX_PARTICLES)
+
+    private var sensorManager: SensorManager? = null
+    private var tiltSensor: Sensor? = null
+    private var tiltX = 0f
+    private var tiltY = 0f
+
+    private val sensorListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent?) {
+            if (event != null && event.values.size >= 2) {
+                tiltX = (event.values[1] * 0.15f).coerceIn(-1.2f, 1.2f)
+                tiltY = (event.values[0] * 0.15f).coerceIn(-1.2f, 1.2f)
+            }
+        }
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    }
 
     /** Per-band countdown preventing rapid-fire particle floods from a single band. */
     private val particleCooldowns = IntArray(BAND_COUNT)
@@ -667,8 +688,8 @@ class FelicityVisualizer @JvmOverloads constructor(
                     p.vx *= PARTICLE_DRAG
                     p.vy *= PARTICLE_VERTICAL_DECAY
                 }
-                p.x += p.vx
-                p.y += p.vy
+                p.x += p.vx + tiltX
+                p.y += p.vy + tiltY
                 p.alpha *= PARTICLE_FADE_RATE
 
                 val expired = p.alpha < 0.01f || when (direction) {
@@ -859,7 +880,8 @@ class FelicityVisualizer @JvmOverloads constructor(
      * @param isHorizontal `true` when the active direction is left-to-right or right-to-left.
      */
     private fun emitParticle(crossCoord: Float, tipCoord: Float, isHorizontal: Boolean) {
-        if (particles.size >= MAX_PARTICLES) particles.removeAt(0)
+        val maxP = if (isBatterySaverActive()) 30 else MAX_PARTICLES
+        if (particles.size >= maxP) particles.removeAt(0)
         val p = Particle()
         val speed = Random.nextFloat() * PARTICLE_SPEED_RANGE + PARTICLE_SPEED_MIN
         p.alpha = Random.nextFloat() * 0.4f + 0.6f
@@ -895,6 +917,43 @@ class FelicityVisualizer @JvmOverloads constructor(
         particles.add(p)
     }
 
+    /**
+     * Emits an explosive burst of reactive ash particles from a user tap or gesture.
+     */
+    fun emitTouchBurst(touchX: Float, touchY: Float, count: Int = 18) {
+        if (!particlesEnabled) return
+        val maxP = if (isBatterySaverActive()) 30 else MAX_PARTICLES
+        for (i in 0 until count) {
+            if (particles.size >= maxP) particles.removeAt(0)
+            val p = Particle()
+            val angle = Random.nextFloat() * 2f * Math.PI.toFloat()
+            val speed = Random.nextFloat() * 5f + 1.5f
+            p.x = touchX
+            p.y = touchY
+            p.vx = kotlin.math.cos(angle) * speed + tiltX
+            p.vy = kotlin.math.sin(angle) * speed + tiltY
+            p.radius = Random.nextFloat() * 3.0f + 1.5f
+            p.alpha = 1.0f
+            p.turbulence = Random.nextFloat() * 0.3f
+            particles.add(p)
+        }
+        invalidate()
+    }
+
+    private fun isBatterySaverActive(): Boolean {
+        if (VisualizerPreferences.is3dBatterySaverEnabled()) return true
+        val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        return pm?.isPowerSaveMode == true
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_DOWN || event.action == MotionEvent.ACTION_MOVE) {
+            emitTouchBurst(event.x, event.y, if (event.action == MotionEvent.ACTION_DOWN) 16 else 4)
+            return true
+        }
+        return super.onTouchEvent(event)
+    }
+
     // == Lifecycle =============================================================
 
     override fun onAttachedToWindow() {
@@ -908,10 +967,18 @@ class FelicityVisualizer @JvmOverloads constructor(
             particlesEnabled = VisualizerPreferences.areParticlesEnabled()
             capsEnabled = VisualizerPreferences.areCapsEnabled()
             capPaint.color = ThemeManager.accent.primaryAccentColor
+
+            sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
+            tiltSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+                    ?: sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+            tiltSensor?.let {
+                sensorManager?.registerListener(sensorListener, it, SensorManager.SENSOR_DELAY_UI)
+            }
         }
     }
 
     override fun onDetachedFromWindow() {
+        sensorManager?.unregisterListener(sensorListener)
         super.onDetachedFromWindow()
         ThemeManager.removeListener(this)
         unregisterListener(prefsListener)

@@ -220,7 +220,18 @@ class ArtFlow @JvmOverloads constructor(
         }
     }
 
+    private var lastFrameTimeMs = 0L
+
     override fun doFrame(frameTimeNanos: Long) {
+        val isBatterySaver = app.simple.felicity.preferences.VisualizerPreferences.is3dBatterySaverEnabled() ||
+                (context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager)?.isPowerSaveMode == true
+        val now = System.currentTimeMillis()
+        if (isBatterySaver && now - lastFrameTimeMs < 33L) {
+            choreographer.postFrameCallback(this)
+            return
+        }
+        lastFrameTimeMs = now
+
         if (!scroller.isFinished) {
             scroller.computeScrollOffset()
             val curr = scroller.currX // we use X channel generically

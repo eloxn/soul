@@ -181,6 +181,7 @@ class ArtFlowRenderer(
     private var uTex = 0
     private var uReflection = 0
     private var uReflectStrength = 0
+    private var uTilt = 0
 
     // Geometry
     private lateinit var quadVB: FloatBuffer
@@ -483,6 +484,7 @@ class ArtFlowRenderer(
         GLES20.glUniform1f(uAlpha, brightness)
         GLES20.glUniform1f(uReflection, 0f)
         GLES20.glUniform1f(uReflectStrength, reflectionStrength)
+        GLES20.glUniform2f(uTilt, tiltX, tiltY)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tex)
         GLES20.glUniform1i(uTex, 0)
@@ -513,6 +515,7 @@ class ArtFlowRenderer(
                 GLES20.glUniform1f(uAlpha, brightness)
                 GLES20.glUniform1f(uReflection, 1f)
                 GLES20.glUniform1f(uReflectStrength, reflectionStrength)
+                GLES20.glUniform2f(uTilt, tiltX, tiltY)
                 GLES20.glDrawElements(GLES20.GL_TRIANGLES, 6, GLES20.GL_UNSIGNED_SHORT, quadIB)
             }
         }
@@ -565,6 +568,7 @@ class ArtFlowRenderer(
             uniform float uAlpha; 
             uniform float uReflection; // 0 = main, 1 = reflection
             uniform float uReflectStrength; 
+            uniform vec2 uTilt;
             void main(){
                 vec4 c = texture2D(uTex, vUV);
                 vec2 uv = vUV - 0.5; 
@@ -576,6 +580,9 @@ class ArtFlowRenderer(
                     c.rgb *= oa;
                     c.a = oa;
                 } else {
+                    vec2 sheenPos = uv + uTilt * 0.7;
+                    float sheen = max(0.0, 1.0 - length(sheenPos) * 2.2);
+                    c.rgb += vec3(0.12, 0.15, 0.22) * (sheen * sheen);
                     c.rgb *= uAlpha;
                     c.a = uAlpha;
                 }
@@ -592,6 +599,7 @@ class ArtFlowRenderer(
         uTex = GLES20.glGetUniformLocation(program, "uTex")
         uReflection = GLES20.glGetUniformLocation(program, "uReflection")
         uReflectStrength = GLES20.glGetUniformLocation(program, "uReflectStrength")
+        uTilt = GLES20.glGetUniformLocation(program, "uTilt")
     }
 
     private fun compileShader(type: Int, src: String): Int {

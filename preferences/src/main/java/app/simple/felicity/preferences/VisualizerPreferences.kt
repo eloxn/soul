@@ -84,4 +84,17 @@ object VisualizerPreferences {
         return SharedPreferences.getSharedPreferences()
             .getInt(VISUALIZER_DIRECTION, DIRECTION_BOTTOM_TO_TOP)
     }
+
+    const val BATTERY_SAVER_3D = "battery_saver_3d"
+
+    fun set3dBatterySaverEnabled(enabled: Boolean) {
+        SharedPreferences.getSharedPreferences().edit {
+            putBoolean(BATTERY_SAVER_3D, enabled)
+        }
+    }
+
+    fun is3dBatterySaverEnabled(): Boolean {
+        return SharedPreferences.getSharedPreferences()
+            .getBoolean(BATTERY_SAVER_3D, false)
+    }
 }
