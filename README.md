@@ -9,8 +9,8 @@
 Created with ❤️ by **[Eloxxn](https://github.com/eloxn)**
 
 <p align="center">
-  <a href="https://github.com/eloxn/soul/releases/latest/download/Soul-v1.0.0.apk">
-    <img src="https://img.shields.io/badge/Download-Soul%20APK%20(v1.0.0)-blue?style=for-the-badge&logo=android&logoColor=white" alt="Download Soul APK" />
+  <a href="https://github.com/eloxn/soul/releases/latest/download/Soul-v1.0.1.apk">
+    <img src="https://img.shields.io/badge/Download-Soul%20APK%20(v1.0.1)-blue?style=for-the-badge&logo=android&logoColor=white" alt="Download Soul APK" />
   </a>
 </p>
 
@@ -27,7 +27,7 @@ Created with ❤️ by **[Eloxxn](https://github.com/eloxn)**
 
 You can download the latest signed release APK directly using the link below:
 
-👉 **[Download Soul v1.0.0 APK](https://github.com/eloxn/soul/releases/download/v1.0.0/Soul-v1.0.0.apk)** *(39.3 MB • Signed with Scheme v2)*
+👉 **[Download Soul v1.0.1 APK](https://github.com/eloxn/soul/releases/download/v1.0.1/Soul-v1.0.1.apk)** *(39.3 MB • Signed with Scheme v2)*
 
 All release notes and assets are also available on the **[Releases Page](https://github.com/eloxn/soul/releases)**.
 
@@ -55,6 +55,7 @@ Soul is **100% free and open-source** — no subscriptions, no ads, no paywalls,
   - Ultra-fast Canvas spectrum visualizer powered by a native PFFFT implementation.
 
 ### 🎨 Modern & Dynamic UI
+- **Live Synced Lyrics Widget:** Interactive home screen widget showing active synchronized lyrics with previous/current/upcoming line previews and media controls.
 - **Album Art Theming:** Interface dynamically adapts its palette to match the artwork of the currently playing track.
 - **Material You & Custom Themes:** Full support for Android 12+ Monet dynamic theming alongside AMOLED Dark, Slate, Oil, and Light themes.
 - **Edge-to-Edge:** Native predictive back animations, gesture navigation, and edge-to-edge layouts.
