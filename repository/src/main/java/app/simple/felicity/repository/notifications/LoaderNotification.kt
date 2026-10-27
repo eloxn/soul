@@ -1,0 +1,266 @@
+package app.simple.felicity.repository.notifications
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.SystemClock
+import androidx.core.app.NotificationCompat
+import app.simple.felicity.repository.R
+
+/**
+ * Manages the "Scanning Library" notification that pops up while Felicity
+ * indexes your music collection. Keeping this separate from the loader itself
+ * means the scanning logic stays focused on scanning, not on notification plumbing.
+ *
+ * The notification starts life as an indeterminate spinner (we don't know how
+ * many songs there are yet), then graduates to a real progress bar once we
+ * have counted all the audio files on the device.
+ *
+ * There is also a subtle race-condition guard built in using a "generation"
+ * counter. If a scan is canceled and a new one starts immediately, the old
+ * scan's cleanup cannot accidentally dismiss the new scan's notification —
+ * because the generation number will have already moved on.
+ *
+ * @author Hamza417
+ */
+class LoaderNotification(private val context: Context) {
+
+    companion object {
+        private const val SCAN_CHANNEL_ID = "felicity_library_scanner"
+
+        /**
+         * Do not use 1001 because it is used as the default notification ID in the AndroidX Media3 library.
+         * See [DefaultMediaNotificationProvider (L229)](https://github.com/androidx/media/blob/8c6678b657ede1e7883fc164ef73ed483c7796c3/libraries/session/src/main/java/androidx/media3/session/DefaultMediaNotificationProvider.java#L229).
+         */
+        private const val SCAN_NOTIFICATION_ID = 1002
+
+        /**
+         * How often (in files evaluated) the notification text is refreshed.
+         * Updating on every single file would hammer the notification system,
+         * so we settle for a nice round number that still feels responsive.
+         */
+        const val NOTIFICATION_UPDATE_INTERVAL = 25
+
+        /**
+         * Minimum wall-clock time between two actual notify() calls, in
+         * milliseconds. Even with [NOTIFICATION_UPDATE_INTERVAL] the updates
+         * can come thick and fast on big libraries, and every notify() call
+         * makes the notification shade re-rank and re-animate — which is also
+         * what keeps interrupting other apps' notifications.
+         */
+        private const val MIN_UPDATE_INTERVAL_MS = 500L
+    }
+
+    private val notificationManager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    /**
+     * Serializes every notify/cancel call to [notificationManager]. Progress
+     * updates arrive from many parallel producer coroutines, and scan
+     * cancellation can kick in from a different thread at any moment. The
+     * active/generation checks below all run INSIDE this lock, so a producer
+     * that already passed a check can never land a notify() after the scan's
+     * final cancel() — which is exactly what leaves ghost "Scanning Library"
+     * notifications stuck on screen forever.
+     */
+    private val lock = Any()
+
+    /**
+     * Each time a new scan begins, this number goes up by one. When a scan
+     * finishes and tries to dismiss the notification, it passes the number it
+     * received when it started. If a newer scan already bumped the counter,
+     * the dismiss call quietly does nothing — protecting the new scan's
+     * notification from being swept away by the old one's cleanup routine.
+     */
+    private var generation = 0
+
+    /**
+     * Tracks whether the notification for the current [generation] is live on
+     * screen. We manage this ourselves because Android does not give us a
+     * reliable API to ask the NotificationManager "hey, is this still showing?".
+     */
+    private var active = false
+
+    /**
+     * Total number of audio files found on the device. Once this is set (non-zero),
+     * the progress bar switches from the spinning indeterminate style to a proper
+     * fill-level bar.
+     */
+    private var totalFiles = 0
+
+    private var lastUpdateElapsedMs = 0L
+
+    /**
+     * Call this right before a scan begins. It sets up the notification channel
+     * (Android is smart enough not to create duplicate channels on repeated calls),
+     * shows the initial "warming up" spinner, and returns a generation token you
+     * will need to pass to [dismiss] at the end of the scan.
+     *
+     * @return A generation token for this scan — hold onto it!
+     */
+    fun begin(context: Context): Int {
+        setupChannel()
+        return synchronized(lock) {
+            totalFiles = 0
+            lastUpdateElapsedMs = 0L
+            generation += 1
+            active = true
+            val token = generation
+            notificationManager.notify(SCAN_NOTIFICATION_ID, buildIndeterminate(context))
+            token
+        }
+    }
+
+    /**
+     * Once you know how many audio files live on the device, call this to give
+     * the notification a finishing line to aim for. Before this is called the
+     * bar stays as an indeterminate spinner. After this, it fills up as files
+     * are scanned — much more satisfying to watch.
+     *
+     * @param generation The token returned by [begin] for the current scan.
+     * @param total The total number of audio files found across all storage volumes.
+     */
+    fun setTotal(generation: Int, total: Int) {
+        synchronized(lock) {
+            if (generation == this.generation) {
+                totalFiles = total
+            }
+        }
+    }
+
+    /**
+     * Refreshes the notification to show the latest scan progress. If we know
+     * the total file count (from [setTotal]), this shows a proper fill-level bar.
+     * Otherwise, it keeps the indeterminate spinner going.
+     *
+     * Updates are rate-limited in time so big libraries don't turn into a
+     * notification storm that constantly re-ranks the shade.
+     *
+     * @param generation The token returned by [begin] for the current scan.
+     * @param scanned How many files have been evaluated (checked) so far.
+     * @param force Skip the time-based rate limit (used for the final "done" update).
+     */
+    fun updateProgress(generation: Int, scanned: Int, force: Boolean = false) {
+        val now = SystemClock.elapsedRealtime()
+
+        synchronized(lock) {
+            // Both checks live inside the lock so a canceled scan's straggler
+            // producer can never resurrect the notification after the scan's
+            // final cancel.
+            if (!active || generation != this.generation) return
+            if (!force && now - lastUpdateElapsedMs < MIN_UPDATE_INTERVAL_MS) return
+
+            lastUpdateElapsedMs = now
+
+            val total = totalFiles
+            val isIndeterminate = total <= 0
+
+            val contentText = if (isIndeterminate) {
+                "Scanning your music library…"
+            } else {
+                "$scanned of $total files scanned"
+            }
+
+            val notification = NotificationCompat.Builder(context, SCAN_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_felicity_full)
+                .setContentTitle("Scanning Library")
+                .setContentText(contentText)
+                .setProgress(total, scanned.coerceAtMost(total), isIndeterminate)
+                .setSilent(true)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setShowWhen(false)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build()
+
+            notificationManager.notify(SCAN_NOTIFICATION_ID, notification)
+        }
+    }
+
+    /**
+     * Dismisses the scan notification — but only if [generation] still matches
+     * the current one. If a newer scan already called [begin] and bumped the
+     * counter, this call quietly does nothing, leaving the newer notification
+     * safely in place.
+     *
+     * @param generation The token returned by [begin] when this scan started.
+     * @return true if [generation] was still current (i.e. this call actually owned
+     *         and dismissed the notification), false if a newer scan had already
+     *         superseded it and this call was a safe no-op. Callers can use this to
+     *         know whether it is safe to also reset any other scan-ownership state —
+     *         a superseded scan must never tear down state belonging to the scan
+     *         that replaced it.
+     */
+    fun dismiss(generation: Int): Boolean {
+        synchronized(lock) {
+            if (generation == this.generation) {
+                active = false
+                notificationManager.cancel(SCAN_NOTIFICATION_ID)
+                return true
+            }
+            return false
+        }
+    }
+
+    /**
+     * Force-dismisses the notification regardless of the current generation.
+     * Use this for hard-stop situations like service shutdown, where you are
+     * absolutely sure nothing is running anymore, and you just want it gone.
+     */
+    fun dismissForce() {
+        synchronized(lock) {
+            active = false
+            notificationManager.cancel(SCAN_NOTIFICATION_ID)
+        }
+    }
+
+    /**
+     * Invalidates every outstanding generation token without touching the
+     * notification currently on screen. Used right before an immediate
+     * cancel-and-restart: the old scan's cleanup can no longer dismiss what
+     * the new scan is about to post, and the new scan's [begin] simply
+     * replaces the old notification in place — no visible blink.
+     */
+    fun invalidate() {
+        synchronized(lock) {
+            generation += 1
+            active = false
+        }
+    }
+
+    /**
+     * Returns true when the notification is currently visible on screen.
+     * We track this ourselves with a simple boolean flag rather than asking
+     * the system, since Android's NotificationManager has no reliable "is it
+     * showing?" API for the app's own notifications.
+     */
+    fun isShowing(): Boolean = synchronized(lock) { active }
+
+    private fun setupChannel() {
+        val channel = NotificationChannel(
+                SCAN_CHANNEL_ID,
+                "Library Scanner",
+                NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Shows progress while your music library is being scanned"
+            setSound(null, null)
+            enableVibration(false)
+        }
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    private fun buildIndeterminate(context: Context): Notification {
+        return NotificationCompat.Builder(context, SCAN_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_felicity_full)
+            .setContentTitle(context.getString(R.string.scanning_library))
+            .setContentText(context.getString(R.string.getting_music_ready))
+            .setProgress(0, 0, true)
+            .setSilent(true)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setShowWhen(false)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+    }
+}

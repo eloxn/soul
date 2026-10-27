@@ -1,0 +1,329 @@
+name: Build APKs (Release)
+
+on:
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+
+    # Reads the version info from the gradle file so all other jobs can use it.
+    prepare:
+        name: Read Version Info
+        runs-on: ubuntu-latest
+        outputs:
+            version_name: ${{ steps.version.outputs.version_name }}
+            version_code: ${{ steps.version.outputs.version_code }}
+            tag: ${{ steps.version.outputs.tag }}
+
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v5
+
+            -   name: Extract version name and version code
+                id: version
+                run: |
+                    VERSION_NAME=$(grep -oP 'versionName "\K[^"]*' music/build.gradle)
+                    VERSION_CODE=$(grep -oP 'versionCode \K\d+' music/build.gradle)
+                    TAG=$(echo "$VERSION_NAME" | tr '[:upper:]' '[:lower:]')
+
+                    echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+                    echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+                    echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+            -   name: Check that a changelog exists for this version
+                run: |
+                    CODE=$(grep -oP 'versionCode \K\d+' music/build.gradle)
+                    if [ ! -f "fastlane/metadata/android/en-US/changelogs/${CODE}.txt" ]; then
+                      echo "No changelog found for version code ${CODE}. Please add one before releasing."
+                      exit 1
+                    fi
+
+    # Each arch is built in its own job using a Gradle init script that overrides
+    # the foss flavor's abiFilters. This avoids android.injected.build.abi, which
+    # would stamp the APK as testOnly and make it uninstallable on real devices.
+
+    build-arm64-v8a:
+        name: Build arm64-v8a
+        runs-on: ubuntu-latest
+        needs: prepare
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v5
+            -   name: Set up Java and Android SDK
+                uses: actions/setup-java@v4
+                with:
+                    java-version: '21'
+                    distribution: 'temurin'
+            -   name: Decode keystore
+                uses: timheuer/base64-to-file@v1
+                with:
+                    fileName: 'keystore/key.jks'
+                    encodedString: ${{ secrets.SIGN_KEY }}
+            -   name: Accept Android SDK licenses
+                run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+            -   name: Build arm64-v8a release APK
+                run: |
+                    chmod +x ./gradlew
+                    ./gradlew clean assembleFossRelease \
+                      --init-script .github/init-scripts/abi-arm64-v8a.gradle \
+                      --no-build-cache --rerun-tasks
+                env:
+                    SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
+                    SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+                    SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+            -   name: Rename APK to felicity-foss-arm64-v8a.apk
+                run: |
+                    mkdir -p ${{ runner.temp }}/apks
+                    APK=$(find music/ -name "*.apk" | head -n 1)
+                    mv "$APK" "${{ runner.temp }}/apks/felicity-foss-arm64-v8a.apk"
+            -   name: Upload arm64-v8a APK
+                uses: actions/upload-artifact@v4
+                with:
+                    name: felicity-foss-arm64-v8a
+                    path: ${{ runner.temp }}/apks/felicity-foss-arm64-v8a.apk
+                    retention-days: 1
+                    if-no-files-found: error
+
+    build-x86_64:
+        name: Build x86_64
+        runs-on: ubuntu-latest
+        needs: prepare
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v5
+            -   name: Set up Java and Android SDK
+                uses: actions/setup-java@v4
+                with:
+                    java-version: '21'
+                    distribution: 'temurin'
+            -   name: Decode keystore
+                uses: timheuer/base64-to-file@v1
+                with:
+                    fileName: 'keystore/key.jks'
+                    encodedString: ${{ secrets.SIGN_KEY }}
+            -   name: Accept Android SDK licenses
+                run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+            -   name: Build x86_64 release APK
+                run: |
+                    chmod +x ./gradlew
+                    ./gradlew clean assembleFossRelease \
+                      --init-script .github/init-scripts/abi-x86_64.gradle \
+                      --no-build-cache --rerun-tasks
+                env:
+                    SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
+                    SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+                    SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+            -   name: Rename APK to felicity-foss-x86_64.apk
+                run: |
+                    mkdir -p ${{ runner.temp }}/apks
+                    APK=$(find music/ -name "*.apk" | head -n 1)
+                    mv "$APK" "${{ runner.temp }}/apks/felicity-foss-x86_64.apk"
+            -   name: Upload x86_64 APK
+                uses: actions/upload-artifact@v4
+                with:
+                    name: felicity-foss-x86_64
+                    path: ${{ runner.temp }}/apks/felicity-foss-x86_64.apk
+                    retention-days: 1
+                    if-no-files-found: error
+
+    build-armeabi-v7a:
+        name: Build armeabi-v7a
+        runs-on: ubuntu-latest
+        needs: prepare
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v5
+            -   name: Set up Java and Android SDK
+                uses: actions/setup-java@v4
+                with:
+                    java-version: '21'
+                    distribution: 'temurin'
+            -   name: Decode keystore
+                uses: timheuer/base64-to-file@v1
+                with:
+                    fileName: 'keystore/key.jks'
+                    encodedString: ${{ secrets.SIGN_KEY }}
+            -   name: Accept Android SDK licenses
+                run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+            -   name: Build armeabi-v7a release APK
+                run: |
+                    chmod +x ./gradlew
+                    ./gradlew clean assembleFossRelease \
+                      --init-script .github/init-scripts/abi-armeabi-v7a.gradle \
+                      --no-build-cache --rerun-tasks
+                env:
+                    SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
+                    SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+                    SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+            -   name: Rename APK to felicity-foss-armeabi-v7a.apk
+                run: |
+                    mkdir -p ${{ runner.temp }}/apks
+                    APK=$(find music/ -name "*.apk" | head -n 1)
+                    mv "$APK" "${{ runner.temp }}/apks/felicity-foss-armeabi-v7a.apk"
+            -   name: Upload armeabi-v7a APK
+                uses: actions/upload-artifact@v4
+                with:
+                    name: felicity-foss-armeabi-v7a
+                    path: ${{ runner.temp }}/apks/felicity-foss-armeabi-v7a.apk
+                    retention-days: 1
+                    if-no-files-found: error
+
+    build-x86:
+        name: Build x86
+        runs-on: ubuntu-latest
+        needs: prepare
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v5
+            -   name: Set up Java and Android SDK
+                uses: actions/setup-java@v4
+                with:
+                    java-version: '21'
+                    distribution: 'temurin'
+            -   name: Decode keystore
+                uses: timheuer/base64-to-file@v1
+                with:
+                    fileName: 'keystore/key.jks'
+                    encodedString: ${{ secrets.SIGN_KEY }}
+            -   name: Accept Android SDK licenses
+                run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+            -   name: Build x86 release APK
+                run: |
+                    chmod +x ./gradlew
+                    ./gradlew clean assembleFossRelease \
+                      --init-script .github/init-scripts/abi-x86.gradle \
+                      --no-build-cache --rerun-tasks
+                env:
+                    SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
+                    SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+                    SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+            -   name: Rename APK to felicity-foss-x86.apk
+                run: |
+                    mkdir -p ${{ runner.temp }}/apks
+                    APK=$(find music/ -name "*.apk" | head -n 1)
+                    mv "$APK" "${{ runner.temp }}/apks/felicity-foss-x86.apk"
+            -   name: Upload x86 APK
+                uses: actions/upload-artifact@v4
+                with:
+                    name: felicity-foss-x86
+                    path: ${{ runner.temp }}/apks/felicity-foss-x86.apk
+                    retention-days: 1
+                    if-no-files-found: error
+
+    # Builds a single APK that contains native libraries for both arm64-v8a and x86_64,
+    # so users on any modern 64-bit device can install one file without picking an arch.
+    build-universal:
+        name: Build Universal (64-bit)
+        runs-on: ubuntu-latest
+        needs: prepare
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v5
+            -   name: Set up Java and Android SDK
+                uses: actions/setup-java@v4
+                with:
+                    java-version: '21'
+                    distribution: 'temurin'
+            -   name: Decode keystore
+                uses: timheuer/base64-to-file@v1
+                with:
+                    fileName: 'keystore/key.jks'
+                    encodedString: ${{ secrets.SIGN_KEY }}
+            -   name: Accept Android SDK licenses
+                run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+            -   name: Build universal 64-bit release APK
+                run: |
+                    chmod +x ./gradlew
+                    ./gradlew clean assembleFossRelease \
+                      --init-script .github/init-scripts/abi-foss-universal-64bit.gradle \
+                      --no-build-cache --rerun-tasks
+                env:
+                    SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
+                    SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+                    SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+            -   name: Rename APK to felicity-foss-universal.apk
+                run: |
+                    mkdir -p ${{ runner.temp }}/apks
+                    APK=$(find music/ -name "*.apk" | head -n 1)
+                    mv "$APK" "${{ runner.temp }}/apks/felicity-foss-universal.apk"
+            -   name: Upload universal APK
+                uses: actions/upload-artifact@v4
+                with:
+                    name: felicity-foss-universal
+                    path: ${{ runner.temp }}/apks/felicity-foss-universal.apk
+                    retention-days: 1
+                    if-no-files-found: error
+
+    # Builds the Play Store AAB with only 64-bit native libraries (arm64-v8a and x86_64),
+    # which is the format the Play Store uses to deliver the right slices to each device.
+    build-play-universal:
+        name: Build Play Universal AAB (64-bit)
+        runs-on: ubuntu-latest
+        needs: prepare
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v5
+            -   name: Set up Java and Android SDK
+                uses: actions/setup-java@v4
+                with:
+                    java-version: '21'
+                    distribution: 'temurin'
+            -   name: Decode keystore
+                uses: timheuer/base64-to-file@v1
+                with:
+                    fileName: 'keystore/key.jks'
+                    encodedString: ${{ secrets.SIGN_KEY }}
+            -   name: Accept Android SDK licenses
+                run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+            -   name: Build play universal 64-bit release AAB
+                run: |
+                    chmod +x ./gradlew
+                    ./gradlew clean bundlePlayRelease \
+                      --init-script .github/init-scripts/abi-play-universal-64bit.gradle \
+                      --no-build-cache --rerun-tasks
+                env:
+                    SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
+                    SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+                    SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+            -   name: Rename AAB to felicity-play-universal.aab
+                run: |
+                    mkdir -p ${{ runner.temp }}/aabs
+                    AAB=$(find music/ -name "*.aab" | head -n 1)
+                    mv "$AAB" "${{ runner.temp }}/aabs/felicity-play-universal.aab"
+            -   name: Upload play universal AAB
+                uses: actions/upload-artifact@v4
+                with:
+                    name: felicity-play-universal
+                    path: ${{ runner.temp }}/aabs/felicity-play-universal.aab
+                    retention-days: 1
+                    if-no-files-found: error
+
+    # Waits for all arch builds to finish, then creates the GitHub release with all APKs and the play AAB attached.
+    publish:
+        name: Publish Release
+        runs-on: ubuntu-latest
+        needs: [ prepare, build-arm64-v8a, build-x86_64, build-armeabi-v7a, build-x86, build-universal ]
+
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v5
+
+            -   name: Download all APKs
+                uses: actions/download-artifact@v4
+                with:
+                    pattern: felicity-foss-*
+                    path: artifacts/
+                    merge-multiple: true
+
+            -   name: Create GitHub Release
+                uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
+                with:
+                    files: |
+                        artifacts/*.apk
+                    name: ${{ needs.prepare.outputs.version_name }}
+                    tag_name: ${{ needs.prepare.outputs.tag }}
+                    body_path: changelogs.md
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

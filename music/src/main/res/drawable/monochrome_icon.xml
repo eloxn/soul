@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Upper and lower eyelids -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M24,54 C34,34 74,34 84,54 C74,70 34,70 24,54 Z M28,54 C36,64 72,64 80,54 C72,40 36,40 28,54 Z" />
+    <!-- Pupil / Iris ring -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M54,41 C61.18,41 67,46.82 67,54 C67,61.18 61.18,67 54,67 C46.82,67 41,61.18 41,54 C41,46.82 46.82,41 54,41 Z" />
+    <!-- 4-pointed star overlay -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M54,14 L56.5,49.5 L88,54 L56.5,58.5 L54,94 L51.5,58.5 L20,54 L51.5,49.5 Z" />
+    <!-- Dot highlight -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M65,65 m-2.5,0 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0" />
+</vector>
