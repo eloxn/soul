@@ -8,11 +8,28 @@
 
 Created with ❤️ by **[Eloxxn](https://github.com/eloxn)**
 
+<p align="center">
+  <a href="https://github.com/eloxn/soul/releases/latest/download/Soul-v1.0.0.apk">
+    <img src="https://img.shields.io/badge/Download-Soul%20APK%20(v1.0.0)-blue?style=for-the-badge&logo=android&logoColor=white" alt="Download Soul APK" />
+  </a>
+</p>
+
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
 [![Platform: Android](https://img.shields.io/badge/Platform-Android_10+-green.svg?logo=android&logoColor=white)](https://www.android.com/)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-eloxn%2Fsoul-181717.svg?logo=github&logoColor=white)](https://github.com/eloxn/soul)
+[![Latest Release](https://img.shields.io/github/v/release/eloxn/soul?color=success&label=Release)](https://github.com/eloxn/soul/releases/latest)
 
 </div>
+
+---
+
+## 📥 Direct Download
+
+You can download the latest signed release APK directly using the link below:
+
+👉 **[Download Soul v1.0.0 APK](https://github.com/eloxn/soul/releases/download/v1.0.0/Soul-v1.0.0.apk)** *(39.3 MB • Signed with Scheme v2)*
+
+All release notes and assets are also available on the **[Releases Page](https://github.com/eloxn/soul/releases)**.
 
 ---
 
