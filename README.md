@@ -1,172 +1,103 @@
-# Felicity
+<div align="center">
 
-*_Felicity_ is the third and final app of the three projects I had planned for my own learning, the
-first two are [Positional](https://github.com/Hamza417/Positional)
-and [Inure App Manager](https://github.com/Hamza417/Inure).*
+<img src="./music/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="128" height="128" alt="Soul Logo" style="border-radius: 20%;" />
 
-The development of the app has started and if you've used the first two apps you might want to join
-the [Telegram Channel](https://t.me/felicity_music_player) and become the part of the whole initial
-development process.
+# Soul
 
-The project will be developed under the codename Felicity, the final name maybe updated in the
-future.
+**A powerful, modern, and completely free audio player for Android.**
 
-## Stats
+Created with ❤️ by **[Eloxxn](https://github.com/eloxn)**
 
-[![](https://img.shields.io/github/downloads/Hamza417/Felicity/total?color=blue&label=Total%20Downloads%20(GitHub)&logo=github&logoColor=white)](https://tooomm.github.io/github-release-stats/?username=Hamza417&repository=Felicity)
-![](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgithub.com%2Fkitswas%2Ffdroid-metrics-dashboard%2Fraw%2Frefs%2Fheads%2Fmain%2Fprocessed%2Ftotal%2Fapp.simple.felicity.json&query=%24.total_downloads&logo=fdroid&label=Total%20Downloads%20(F-Droid))
-[![](https://img.shields.io/endpoint?url=https://ghloc.vercel.app/api/Hamza417/Felicity/badge?style=flat&logo=kotlin&logoColor=white&label=Total%20Lines&color=indianred)](https://ghloc.vercel.app/Hamza417/Felicity?branch=master)
-[![Release](https://img.shields.io/github/v/release/Hamza417/Felicity?color=52be80&label=Current%20Release)](https://github.com/Hamza417/Felicity/releases)
-![](https://img.shields.io/github/languages/count/Hamza417/Felicity?color=white&label=Languages)
-![](https://img.shields.io/github/license/Hamza417/Felicity?color=red&label=License)
-![](https://img.shields.io/badge/Minimum%20SDK-29%20(Android%2010)-839192?logo=android&logoColor=white)
-![](https://img.shields.io/badge/Target%20SDK-36%20(Android%2016)-566573?logo=android&logoColor=white)
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Hamza417/Felicity/build_preview.yml?branch=master&logo=github&logoColor=white&label=build%20(preview)&color=white)](https://github.com/Hamza417/Felicity/actions/workflows/build_preview.yml)
-[![Crowdin](https://badges.crowdin.net/felicity/localized.svg)](https://crowdin.com/project/felicity)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
+[![Platform: Android](https://img.shields.io/badge/Platform-Android_10+-green.svg?logo=android&logoColor=white)](https://www.android.com/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-eloxn%2Fsoul-181717.svg?logo=github&logoColor=white)](https://github.com/eloxn/soul)
 
-## Download
+</div>
 
-[![](https://img.shields.io/badge/Play%20Store-05acff?logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=app.simple.felicity)
-[![](https://img.shields.io/github/v/release/Hamza417/Felicity?color=181717&logo=github&label=GitHub%20Release)](https://github.com/Hamza417/Felicity/releases/latest)
-[![](https://img.shields.io/f-droid/v/app.simple.felicity?logo=fdroid&logoColor=white&label=F-Droid&color=1976D2)](https://f-droid.org/en/packages/app.simple.felicity/)
+---
 
+## 🎵 About Soul
 
-## Features
+**Soul** is a high-performance, fully unlocked, audiophile-grade music player designed from the ground up for Android. Built with a passion for pristine acoustics and modern fluid design, Soul combines a custom low-latency C++ DSP audio engine with dynamic theming to bring your music to life.
 
-### Custom Audio Engine
+Soul is **100% free and open-source** — no subscriptions, no ads, no paywalls, and no feature gates.
 
-- **Dual Decoder** utilizing both hardware and software decoding through FFmpeg.
-- **Custom DSP:** The entire audio processing chain (EQ, Bass, Reverb) is written in C++ via JNI. It
-  utilizes ARM NEON SIMD auto-vectorization to process audio arrays with absolute minimum CPU
-  overhead.
-    - Supports bass, treble and more.
-    - Native downmixing support to pass multichannel audio to stereo output.
-- **Advanced Effects:** Integrated spatial effects including stereo widening and tape saturation for
-  an analog feel.
-- **10-band Equalizer:** A powerful equalizer with 10 adjustable frequency bands up to +/-15 dB with
-  dedicated PreAmp support.
-- **Gapless Playback:** Seamless transition between tracks without any gaps or interruptions.
-- **High-Resolution Audio Support:** Support for high-resolution audio formats such as FLAC, ALAC,
-  and DSD for audiophile-grade sound quality.
-- **Multi-Channel Audio Support:** Support for multichannel audio formats like 5.1 and 7.1 surround
-  sound for an immersive listening experience.
-- **Milkdrop Visualizer:** Twin buffer enabled Milkdrop visualizer support powered by a native DSP,
-  rendering on GL surface at native fps in real-time.
+---
 
-### User Interface
+## ✨ Features
 
-- **Fully custom-built and highly optimized** interface inspired by Inure App Manager.
-- **Dynamic Theming:** The app's theme dynamically adapts to the album art of the currently playing
-  track, creating a visually cohesive and immersive experience.
-- **Custom Animations:** Smooth and visually appealing animations throughout the app, enhancing the
-  user experience and making interactions more engaging.
-- **Themes:** Multiple themes including light, dark, AMOLED black, Material You and others.
-- **Core:** Predictive back, edge to edge and adapted to all modern Android UI features.
-- **Embedded Lyrics:** Reliable, on-the-fly LRC extraction and support for online downloading from
-  LrcLib.
-- **Dual Fast Scroll:** Simultaneous support for both slide to scroll and jump to letter fast
-  scroll.
-- **Realtime Audio Visualizer:** A lock-free, zero-allocation visualizer rendering on the Canvas at
-  native fps, powered by a native PFFFT implementation.
+### 🎧 Custom C++ Audio Engine & DSP
+- **Dual Decoder:** Seamless combination of hardware decoding and software decoding through FFmpeg.
+- **Audiophile High-Res Support:** Native playback for FLAC, ALAC, DSD, WAV, MP3, AAC, and multi-channel audio (5.1 and 7.1).
+- **10-Band Equalizer:** Precision 10-band EQ with +/-15 dB adjustment and customizable PreAmp.
+- **Hardware Acceleration:** Native DSP audio processing utilizes ARM NEON SIMD auto-vectorization for near-zero CPU overhead and battery conservation.
+- **Advanced Sound Effects:** Built-in Bass Boost, Treble adjustment, Reverb, Stereo Widening, and Tape Saturation for an authentic analog warmth.
+- **Gapless Playback:** Uninterrupted transitions between tracks.
+- **Real-Time Visualizers:**
+  - Real-time Milkdrop visualizer rendering on GL surface at native display refresh rates.
+  - Ultra-fast Canvas spectrum visualizer powered by a native PFFFT implementation.
 
-### Library Management
+### 🎨 Modern & Dynamic UI
+- **Album Art Theming:** Interface dynamically adapts its palette to match the artwork of the currently playing track.
+- **Material You & Custom Themes:** Full support for Android 12+ Monet dynamic theming alongside AMOLED Dark, Slate, Oil, and Light themes.
+- **Edge-to-Edge:** Native predictive back animations, gesture navigation, and edge-to-edge layouts.
+- **Synchronized Lyrics:** Instant LRC extraction from embedded tags and automatic online lyrics retrieval via LrcLib.
+- **Dual Fast Scroll:** Jump to letters quickly or drag smoothly through large music libraries.
 
-- **Realtime Library Updates:** The app automatically detects and updates the music library in
-  real-time as new tracks are added or removed from the device adapted from Peristyle app.
-- **Auto Scanning:** The app automatically scans for new music files and updates the library without
-  requiring manual refreshes.
-- **Server Mode:** Host Felicity as a local server to create a central music library for all local
-  and possibly remote devices through Wi-Fi.
-
-### Smart Core
-
+### 📂 Smart Library Management
+- **Instant Auto-Scan:** Automatically recognizes additions and deletions in your media storage in real-time.
+- **Playlists & Queues:** Robust M3U playlist support, multiple queue management, tag editing, and bookmarks.
 - **True Randomized Shuffle:** Choose between Miller and Fisher-Yates shuffle algorithms.
+- **Local Server Mode:** Host a lightweight local web server directly from your phone to stream music to other devices on your Wi-Fi network.
 
-This feature list is not exhaustive and only main features are listed.
+---
 
-## Roadmap
+## 📸 Screenshots
 
-- [x] Initial development and setup
-- [x] Custom audio engine implementation
-- [x] Basic playback controls and UI
-- [x] Library management and scanning
-- [x] Advanced audio effects and equalizer
-- [x] Dynamic theming and custom animations
-- [x] Embedded lyrics support
-- [x] Realtime audio visualizer
-- [x] Milkdrop visualizer support
-- [ ] ~Crossfade support~
-- [ ] Multiple Player interface styles. _(partially fulfilled)_
-- [x] Playlist support
-- [x] LRC Editor
-- [x] Word-by-Word LRC support
-- [x] m3u playlist support
-- [x] Metadata editing support
-- [x] Replay gain
-- [x] Local server for centralized music access across multiple devices.
-- [x] Selection support for library management and playlist creation.
-- [x] Reproducible build
-- [x] Parametric Equalizer
-- [ ] Sleep Timer
-- [ ] Global Search Provider
-- [ ] More widgets
-- [x] Multiple Queue Support
-- [x] Bookmarks
+| Player & Lyrics | Equalizer & DSP | Library |
+| :---: | :---: | :---: |
+| <img src="./screenshots/01.png" width="250" /> | <img src="./screenshots/04.png" width="250" /> | <img src="./screenshots/07.png" width="250" /> |
+| <img src="./screenshots/02.png" width="250" /> | <img src="./screenshots/05.png" width="250" /> | <img src="./screenshots/08.png" width="250" /> |
+| <img src="./screenshots/03.png" width="250" /> | <img src="./screenshots/06.png" width="250" /> | <img src="./screenshots/11.png" width="250" /> |
 
-##### Niche Features
+---
 
-Features that are planned but will not be a priority.
+## 🛠️ Building from Source
 
-- [ ] Cue sheet support
-- [x] ~Native USB DAC support~
-- [x] Oboe
-- [x] AAudio
+### Prerequisites
+- Android Studio / Android SDK (API 34+)
+- Android NDK & CMake
+- JDK 17 or JDK 21
 
-... and more features will be updated here as development progresses.
+### Build Instructions
+Clone the repository:
+```bash
+git clone https://github.com/eloxn/soul.git
+cd soul
+```
 
-## Screenshots
+Compile the release APK:
+```bash
+# Build the FOSS release APK
+./gradlew :music:assembleFossRelease
 
-|                          |                          |                          |
-|--------------------------|--------------------------|--------------------------|
-| ![](/screenshots/01.png) | ![](/screenshots/02.png) | ![](/screenshots/03.png) |
-| ![](/screenshots/04.png) | ![](/screenshots/05.png) | ![](/screenshots/06.png) |
-| ![](/screenshots/07.png) | ![](/screenshots/08.png) | ![](/screenshots/11.png) |
-| ![](/screenshots/12.png) | ![](/screenshots/13.png) | ![](/screenshots/14.png) |
-| ![](/screenshots/15.png) | ![](/screenshots/16.png) | ![](/screenshots/17.png) |
-| ![](/screenshots/18.png) | ![](/screenshots/19.png) | ![](/screenshots/20.png) |
-| ![](/screenshots/21.png) | ![](/screenshots/22.png) | ![](/screenshots/23.png) |
-| ![](/screenshots/24.png) | ![](/screenshots/25.png) | ![](/screenshots/26.gif) |
-| ![](/screenshots/27.png) | ![](/screenshots/28.png) | ![](/screenshots/29.png) |
+# Or build the standard release APK
+./gradlew :music:assemblePlayRelease
+```
 
-| Artflow Interface        |
-|--------------------------|
-| ![](/screenshots/09.png) |
-| ![](/screenshots/10.png) |
+The compiled APK will be located in:
+`music/build/outputs/apk/foss/release/music-foss-release.apk`
 
-| Server Webpage                        |
-|---------------------------------------|
-| ![](/screenshots/server_01_dark.png)  |
-| ![](/screenshots/server_01_light.png) |
+---
 
-## Translations
+## 👤 Creator
 
-[![Crowdin](https://badges.crowdin.net/felicity/localized.svg)](https://crowdin.com/project/felicity)
+Soul is created and maintained by **[Eloxxn](https://github.com/eloxn)**.
 
-Felicity now supports localization. If you want to translate it into your own language(s), you can
-do so [here on Crowdin](https://crowdin.com/project/felicity).
+If you enjoy using Soul or want to contribute, feel free to star the repository or submit issues on GitHub!
 
-[Contributors](https://crowdin.com/project/felicity/members)
+---
 
-## License
+## 📄 License
 
-**Felicity Music Player** Copyright © 2026 - Hamza Rizwan
-
-**Felicity Music Player** is released as open source software under
-the [GNU AGPL v3](https://www.gnu.org/licenses/agpl-3.0.en.html)
-license, see the [LICENSE](./LICENSE) file in the project root for the full license text.
-
-## History
-
-Felicity as a whole project is a continuation of my first ever programming
-project [Beatz](https://github.com/Hamza417/Beatz) which I
-tried to do back then solely for learning and getting used to building.
+Soul is distributed under the [GNU AGPL v3 License](./LICENSE).
