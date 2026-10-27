@@ -22,6 +22,10 @@ object WidgetStatePrefs {
     private const val KEY_IS_PLAYING = "widget_is_playing"
     private const val KEY_SONG_ID = "widget_song_id"
 
+    private const val KEY_LYRIC_PREV = "widget_lyric_prev"
+    private const val KEY_LYRIC_CURRENT = "widget_lyric_current"
+    private const val KEY_LYRIC_NEXT = "widget_lyric_next"
+
     /**
      * Saves the latest song and playback info so the widget can draw something
      * meaningful the next time it wakes up (even if the service is long gone).
@@ -32,6 +36,18 @@ object WidgetStatePrefs {
             putString(KEY_ARTIST, artist ?: "")
             putBoolean(KEY_IS_PLAYING, isPlaying)
             putLong(KEY_SONG_ID, songId)
+            apply()
+        }
+    }
+
+    /**
+     * Saves the latest active lyric lines for synced display.
+     */
+    fun saveLyrics(context: Context, prev: String?, current: String?, next: String?) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().apply {
+            putString(KEY_LYRIC_PREV, prev ?: "")
+            putString(KEY_LYRIC_CURRENT, current ?: "")
+            putString(KEY_LYRIC_NEXT, next ?: "")
             apply()
         }
     }
@@ -55,5 +71,20 @@ object WidgetStatePrefs {
     fun getSongId(context: Context): Long =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getLong(KEY_SONG_ID, -1L)
+
+    /** Returns the previous lyric line. */
+    fun getLyricPrev(context: Context): String =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_LYRIC_PREV, "") ?: ""
+
+    /** Returns the current synced lyric line. */
+    fun getLyricCurrent(context: Context): String =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_LYRIC_CURRENT, "") ?: ""
+
+    /** Returns the next upcoming lyric line. */
+    fun getLyricNext(context: Context): String =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_LYRIC_NEXT, "") ?: ""
 }
 

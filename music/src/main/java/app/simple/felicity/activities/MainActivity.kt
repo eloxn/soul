@@ -61,6 +61,7 @@ import app.simple.felicity.repository.repositories.LrcRepository
 import app.simple.felicity.repository.services.AudioDatabaseService
 import app.simple.felicity.repository.utils.AudioUtils.getProperArtists
 import app.simple.felicity.repository.utils.AudioUtils.getProperTitle
+import app.simple.felicity.widget.LyricsWidgetManager
 import app.simple.felicity.shared.utils.ConditionUtils.invert
 import app.simple.felicity.shared.utils.ConditionUtils.isNotNull
 import app.simple.felicity.shared.utils.ConditionUtils.isNull
@@ -167,6 +168,8 @@ class MainActivity : BaseActivity(), MiniPlayerCallbacks {
 
             startAudioDatabaseService()
         }
+
+        LyricsWidgetManager.init(this)
 
         lifecycleScope.launch {
             MediaPlaybackManager.songSeekPositionFlow.collect { position ->

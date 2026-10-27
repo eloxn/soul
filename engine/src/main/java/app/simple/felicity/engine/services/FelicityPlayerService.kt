@@ -1498,17 +1498,21 @@ class FelicityPlayerService : MediaLibraryService(), SharedPreferences.OnSharedP
         val isPlaying = player.isPlaying
         val songId = mediaItem.mediaId.toLongOrNull() ?: -1L
 
-        val intent = Intent("app.simple.felicity.ACTION_WIDGET_UPDATE").apply {
-            component = ComponentName(
-                    applicationContext.packageName,
-                    "app.simple.felicity.widget.FelicityWidgetProvider"
-            )
-            putExtra("extra_title", title)
-            putExtra("extra_artist", artist)
-            putExtra("extra_is_playing", isPlaying)
-            putExtra("extra_song_id", songId)
+        val providers = arrayOf(
+                "app.simple.felicity.widget.FelicityWidgetProvider",
+                "app.simple.felicity.widget.LyricsWidgetProvider"
+        )
+
+        for (provider in providers) {
+            val intent = Intent("app.simple.felicity.ACTION_WIDGET_UPDATE").apply {
+                component = ComponentName(applicationContext.packageName, provider)
+                putExtra("extra_title", title)
+                putExtra("extra_artist", artist)
+                putExtra("extra_is_playing", isPlaying)
+                putExtra("extra_song_id", songId)
+            }
+            sendBroadcast(intent)
         }
-        sendBroadcast(intent)
     }
 
     /**

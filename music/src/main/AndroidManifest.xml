@@ -69,6 +69,20 @@
                 android:resource="@xml/widget_blur_info" />
         </receiver>
 
+        <!-- Home screen widget — Synced Lyrics widget with real-time text and controls. -->
+        <receiver
+            android:name=".widget.LyricsWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_synced_lyrics">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="app.simple.felicity.ACTION_WIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_lyrics_info" />
+        </receiver>
+
         <!-- Handles the actual button taps (play/pause, next, prev) from the widget. -->
         <receiver
             android:name=".widget.WidgetActionReceiver"

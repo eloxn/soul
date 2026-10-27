@@ -2,6 +2,10 @@
     <string name="not_available">N/A</string>
     <string name="unknown">Unknown</string>
     <string name="crash_report">Crash Report</string>
+    <string name="widget_synced_lyrics">Soul Synced Lyrics</string>
+    <string name="widget_synced_lyrics_desc">Displays currently playing track with real-time synchronized lyrics and controls.</string>
+    <string name="no_synced_lyrics">No synced lyrics available</string>
+    <string name="no_song_playing">No song playing</string>
     <string name="close">Close</string>
     <string name="send">Send</string>
     <string name="pick_artist_image">Pick Artist Image</string>
