@@ -74,14 +74,27 @@ class ArtFlowRenderer(
     @Volatile
     private var reflectionEnabled = true
 
+    @Volatile
+    private var tiltX = 0f
+    @Volatile
+    private var tiltY = 0f
+
+    fun setTilt(pitch: Float, roll: Float) {
+        tiltX = (roll * 0.15f).coerceIn(-0.5f, 0.5f)
+        tiltY = (pitch * 0.15f).coerceIn(-0.5f, 0.5f)
+        updateCamera()
+        glView.requestRender()
+    }
+
     fun updateCamera() {
         val z = if (verticalOrientation) cameraZPortrait else cameraZLandscape
-        val y = if (verticalOrientation) 0f else CarouselPreferences.getEyeY()
+        val y = (if (verticalOrientation) 0f else CarouselPreferences.getEyeY()) + tiltY
+        val x = tiltX
 
-        // eye at (0,0,z) looking at origin
+        // eye at (x,y,z) looking at origin
         Matrix.setLookAtM(/* rm = */ view,
                           /* rmOffset = */ 0,
-                          /* eyeX = */ 0f,
+                          /* eyeX = */ x,
                           /* eyeY = */ y,
                           /* eyeZ = */ z,
                           /* centerX = */ 0f,

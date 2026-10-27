@@ -2,6 +2,8 @@ package app.simple.felicity.decorations.lrc.parser;
 
 import android.text.TextUtils;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -118,7 +120,7 @@ public class LrcParser implements ILyricsParser {
     }
     
     /**
-     * Parse lyric line with time tags
+     * Parse lyric line with time tags, supporting dual-language transliteration and romaji tracks.
      */
     private void parseLyricLine(String line, LrcData lrcData) {
         Matcher lineMatcher = LINE_PATTERN.matcher(line);
@@ -131,11 +133,54 @@ public class LrcParser implements ILyricsParser {
                 text = text != null ? text.trim() : "";
                 text = text.replaceAll("<\\d{1,2}:\\d{2}\\.\\d{2,3}>", "");
                 
+                String primaryText = text;
+                String secondaryText = null;
+
+                // Support inline secondary/transliteration tracks (delimited by //, |, or tab)
+                if (text.contains(" // ")) {
+                    String[] parts = text.split(" // ", 2);
+                    primaryText = parts[0].trim();
+                    secondaryText = parts[1].trim();
+                } else if (text.contains(" | ")) {
+                    String[] parts = text.split(" \\| ", 2);
+                    primaryText = parts[0].trim();
+                    secondaryText = parts[1].trim();
+                } else if (text.contains("\t")) {
+                    String[] parts = text.split("\t", 2);
+                    primaryText = parts[0].trim();
+                    secondaryText = parts[1].trim();
+                }
+                
                 // Parse all time tags in this line
                 Matcher timeMatcher = TIME_TAG_PATTERN.matcher(timeTags);
                 while (timeMatcher.find()) {
                     long timeInMillis = parseTime(timeMatcher);
-                    lrcData.addEntry(new LrcEntry(timeInMillis, text));
+                    
+                    // Support dual-line secondary tracks with identical timestamps:
+                    // e.g. [01:23.45]Original line
+                    //      [01:23.45]Translated / Romaji line
+                    List<LrcEntry> entries = lrcData.getEntries();
+                    if (!entries.isEmpty() && secondaryText == null) {
+                        LrcEntry last = entries.get(entries.size() - 1);
+                        if (Math.abs(last.getTimeInMillis() - timeInMillis) <= 150 && (last.getRomanization() == null || last.getRomanization().isEmpty())) {
+                            entries.set(entries.size() - 1, new LrcEntry(
+                                    last.getTimeInMillis(),
+                                    last.getText(),
+                                    primaryText,
+                                    last.getAdlib(),
+                                    last.getWords()
+                            ));
+                            continue;
+                        }
+                    }
+
+                    lrcData.addEntry(new LrcEntry(
+                            timeInMillis,
+                            primaryText,
+                            secondaryText,
+                            null,
+                            Collections.emptyList()
+                    ));
                 }
             }
         }

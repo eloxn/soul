@@ -75,6 +75,20 @@ class EqualizerPresetsViewModel(application: Application) : WrappedViewModel(app
     }
 
     /**
+     * Saves a parametric EQ preset (e.g., imported from an AutoEQ profile).
+     */
+    fun savePeqPreset(name: String, bands: List<Triple<Float, Float, Float>>, preampDb: Float) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val preset = EqualizerPreset.fromPeqBands(
+                    name = name.trim(),
+                    bands = bands,
+                    preampDb = preampDb
+            )
+            db.equalizerPresetDao().insertPreset(preset)
+        }
+    }
+
+    /**
      * Permanently removes a preset from the database.
      * Built-in presets should not be passed here — the UI is responsible for
      * checking [EqualizerPreset.isBuiltIn] before calling this.

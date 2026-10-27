@@ -1,9 +1,13 @@
 package app.simple.felicity.ui.subpanels
 
+import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -16,12 +20,15 @@ import app.simple.felicity.databinding.HeaderEqualizerPresetsBinding
 import app.simple.felicity.decorations.views.AppHeader
 import app.simple.felicity.decorations.views.PopupMenuItem
 import app.simple.felicity.decorations.views.SharedScrollViewPopup
+import app.simple.felicity.engine.managers.AutoEqParser
 import app.simple.felicity.engine.managers.EqualizerManager
 import app.simple.felicity.extensions.fragments.MediaFragment
 import app.simple.felicity.preferences.EqualizerPreferences
 import app.simple.felicity.repository.models.EqualizerPreset
 import app.simple.felicity.viewmodels.dialogs.EqualizerPresetsViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * A full-screen panel that lists all saved equalizer presets — both the ones bundled
@@ -45,6 +52,12 @@ class EqualizerPresets : MediaFragment() {
     private val viewModel: EqualizerPresetsViewModel by viewModels()
     private var adapter: AdapterEqualizerPresets? = null
 
+    private val importAutoEqLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) {
+            importAutoEqFromUri(uri)
+        }
+    }
+
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
@@ -65,8 +78,48 @@ class EqualizerPresets : MediaFragment() {
         binding.appHeader.attachTo(binding.recyclerView, AppHeader.ScrollMode.HIDE_ON_SCROLL)
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
+        headerBinding.importAutoeq.setOnClickListener {
+            importAutoEqLauncher.launch(arrayOf("text/*", "*/*"))
+        }
+
         setupAdapter()
         observePresets()
+    }
+
+    private fun importAutoEqFromUri(uri: Uri) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                var fileName = "AutoEQ Preset"
+                requireContext().contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1 && cursor.moveToFirst()) {
+                        fileName = cursor.getString(nameIndex).substringBeforeLast(".")
+                    }
+                }
+
+                val inputStream = requireContext().contentResolver.openInputStream(uri)
+                val profile = inputStream?.use { AutoEqParser.parse(it, fileName) }
+
+                withContext(Dispatchers.Main) {
+                    if (profile != null && isAdded) {
+                        viewModel.savePeqPreset(profile.name, profile.bands, profile.preampDb)
+                        Toast.makeText(
+                                requireContext(),
+                                getString(R.string.autoeq_import_success, profile.name, profile.bands.size),
+                                Toast.LENGTH_SHORT
+                        ).show()
+                    } else if (isAdded) {
+                        Toast.makeText(requireContext(), R.string.autoeq_import_error, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    if (isAdded) {
+                        Toast.makeText(requireContext(), R.string.autoeq_import_error, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {

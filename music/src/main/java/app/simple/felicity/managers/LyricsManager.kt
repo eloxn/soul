@@ -111,11 +111,41 @@ class LyricsManager @Inject constructor(
     /** Reference to the currently running load job so we can cancel it if the song changes. */
     private var loadingJob: Job? = null
 
+    private var lastActiveSubtitle: String? = null
+
     init {
         // Watch the playback queue — whenever a new song starts, reload lyrics automatically.
         scope.launch {
             MediaPlaybackManager.songPositionFlow.collect {
+                lastActiveSubtitle = null
                 loadLrcData()
+            }
+        }
+
+        // Live Lock Screen & Ambient AOD lyrics synchronization
+        scope.launch {
+            MediaPlaybackManager.songSeekPositionFlow.collect { position ->
+                if (!LyricsPreferences.isLockScreenLyricsEnabled()) return@collect
+                val data = _lrcData.value ?: return@collect
+                if (data.entries.isEmpty()) return@collect
+                var activeLine: String? = null
+                for (entry in data.entries) {
+                    if (entry.timeInMillis <= position + syncOffset) {
+                        activeLine = entry.text
+                    } else {
+                        break
+                    }
+                }
+                if (activeLine != null && activeLine != lastActiveSubtitle) {
+                    lastActiveSubtitle = activeLine
+                    MediaPlaybackManager.updateLiveSubtitle(activeLine)
+                }
+            }
+        }
+
+        scope.launch {
+            _lrcData.collect {
+                _activeLrcData.value = it
             }
         }
     }
@@ -434,6 +464,9 @@ class LyricsManager @Inject constructor(
 
     companion object {
         private const val SYNC_SAVE_DEBOUNCE_MS = 1500L
+
+        private val _activeLrcData = MutableStateFlow<LrcData?>(null)
+        val activeLrcDataFlow: StateFlow<LrcData?> = _activeLrcData.asStateFlow()
     }
 }
 

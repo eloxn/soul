@@ -636,6 +636,15 @@ class MainActivity : BaseActivity(), MiniPlayerCallbacks {
         binding.miniPlayer.hide(animated = true)
     }
 
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        if (isInPictureInPictureMode) {
+            binding.miniPlayer.hide(animated = false)
+        } else {
+            onStateReady()
+        }
+    }
+
     /**
      * Called by [BaseActivity] once the media queue and playback state have been fully
      * restored.  At this point it is safe to reveal the miniplayer without showing it

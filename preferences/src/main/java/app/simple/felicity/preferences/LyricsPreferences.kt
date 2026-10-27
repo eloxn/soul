@@ -58,4 +58,16 @@ object LyricsPreferences {
         return SharedPreferences.getSharedPreferences()
             .getBoolean(ALBUM_ART_BACKGROUND, true)
     }
+
+    const val LOCK_SCREEN_LYRICS = "lyrics_lock_screen_lyrics"
+
+    fun setLockScreenLyrics(enabled: Boolean) {
+        SharedPreferences.getSharedPreferences().edit {
+            putBoolean(LOCK_SCREEN_LYRICS, enabled)
+        }
+    }
+
+    fun isLockScreenLyricsEnabled(): Boolean {
+        return SharedPreferences.getSharedPreferences().getBoolean(LOCK_SCREEN_LYRICS, true)
+    }
 }

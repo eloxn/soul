@@ -994,6 +994,10 @@ open class MediaFragment : KeyboardScopedFragment(), MiniPlayerPolicy {
         openFragment(Milkdrop.newInstance(), Milkdrop.TAG)
     }
 
+    fun openShaderSandboxPanel() {
+        openFragment(app.simple.felicity.ui.panels.ShaderSandbox.newInstance(), app.simple.felicity.ui.panels.ShaderSandbox.TAG)
+    }
+
     /**
      * Opens the playlist context menu dialog for the given [item], mirroring the pattern of
      * [openSongsMenu]. When an [imageView] is supplied the dialog animates in with a shared

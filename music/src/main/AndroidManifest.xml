@@ -14,6 +14,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:name=".application.FelicityApplication"
@@ -31,7 +32,9 @@
         tools:targetApi="tiramisu">
         <activity
             android:name=".activities.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:supportsPictureInPicture="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -42,6 +45,11 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+
+        <!-- Android Auto / Automotive OS media app declaration -->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
 
         <activity
             android:name=".activities.CrashReporterActivity"
@@ -55,6 +63,10 @@
             android:name=".server.ServerModeService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".services.FloatingLyricsService"
+            android:exported="false" />
 
         <!-- Home screen widget — the AppWidgetProvider that draws the 2×4 player tile. -->
         <receiver

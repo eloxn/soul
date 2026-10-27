@@ -22,6 +22,15 @@
             app:appFontStyle="black"
             app:textColorStyle="primary" />
 
+        <app.simple.felicity.decorations.ripple.DynamicRippleImageButton
+            android:id="@+id/import_autoeq"
+            android:layout_width="@dimen/button_size"
+            android:layout_height="@dimen/button_size"
+            android:layout_gravity="center_vertical"
+            android:contentDescription="@string/import_autoeq"
+            android:src="@drawable/ic_file_info"
+            app:buttonTintType="regular" />
+
     </LinearLayout>
 
     <app.simple.felicity.decorations.theme.ThemeDivider

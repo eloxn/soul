@@ -898,6 +898,67 @@ abstract class PreferenceFragment : MediaFragment() {
                 }
         )
 
+        val crossfadeDuration = Preference(
+                title = R.string.crossfade,
+                summary = R.string.crossfade_summary,
+                icon = R.drawable.ic_waves,
+                type = PreferenceType.POPUP,
+                valueProvider = {
+                    val sec = AudioPreferences.getCrossfadeDuration()
+                    if (sec == 0) getString(R.string.off) else "${sec}s"
+                },
+                onPreferenceAction = { view, _ ->
+                    val options = listOf(0, 2, 4, 6, 8, 10, 12)
+                    SharedScrollViewPopup(
+                            container = requireContainerView(),
+                            anchorView = view,
+                            menuItems = options.map { sec ->
+                                PopupMenuItem(title = if (sec == 0) getString(R.string.off) else "${sec}s")
+                            },
+                            onMenuItemClick = { index ->
+                                val selectedSec = options.getOrNull(index) ?: 0
+                                AudioPreferences.setCrossfadeDuration(selectedSec)
+                                (view as TextView).text = if (selectedSec == 0) getString(R.string.off) else "${selectedSec}s"
+                            },
+                            onDismiss = {}
+                    ).show()
+                }
+        )
+
+        val crossfadeCurve = Preference(
+                title = R.string.crossfade_curve,
+                summary = R.string.crossfade_summary,
+                icon = R.drawable.ic_tune,
+                type = PreferenceType.POPUP,
+                valueProvider = {
+                    if (AudioPreferences.getCrossfadeCurve() == AudioPreferences.CROSSFADE_CURVE_EQUAL_POWER) {
+                        getString(R.string.crossfade_curve_equal_power)
+                    } else {
+                        getString(R.string.crossfade_curve_linear)
+                    }
+                },
+                onPreferenceAction = { view, _ ->
+                    SharedScrollViewPopup(
+                            container = requireContainerView(),
+                            anchorView = view,
+                            menuItems = listOf(
+                                    PopupMenuItem(title = R.string.crossfade_curve_equal_power),
+                                    PopupMenuItem(title = R.string.crossfade_curve_linear)
+                            ),
+                            onMenuItemClick = {
+                                if (it == R.string.crossfade_curve_equal_power) {
+                                    AudioPreferences.setCrossfadeCurve(AudioPreferences.CROSSFADE_CURVE_EQUAL_POWER)
+                                    (view as TextView).text = getString(R.string.crossfade_curve_equal_power)
+                                } else {
+                                    AudioPreferences.setCrossfadeCurve(AudioPreferences.CROSSFADE_CURVE_LINEAR)
+                                    (view as TextView).text = getString(R.string.crossfade_curve_linear)
+                                }
+                            },
+                            onDismiss = {}
+                    ).show()
+                }
+        )
+
         val skipSilenceToggle = Preference(
                 title = R.string.skip_silence,
                 summary = R.string.skip_silence_summary,
@@ -979,13 +1040,13 @@ abstract class PreferenceFragment : MediaFragment() {
         preferences.add(fallbackToSWToggle)
         preferences.add(outputHeader)
         preferences.add(sinkPopup)
-        if (BuildConfig.DEBUG) {
-            preferences.add(usbDacControl)
-        }
+        preferences.add(usbDacControl)
         preferences.add(hiresToggle)
         preferences.add(playbackHeader)
         preferences.add(stereoDownmixing)
         preferences.add(gaplessToggle)
+        preferences.add(crossfadeDuration)
+        preferences.add(crossfadeCurve)
         preferences.add(skipSilenceToggle)
         preferences.add(replayGainHeader)
         preferences.add(autoReplayGainToggle)

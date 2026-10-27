@@ -3,6 +3,10 @@ package app.simple.felicity.decorations.artflow
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.util.Log
@@ -182,6 +186,7 @@ class ArtFlow @JvmOverloads constructor(
     }
 
     override fun onDetachedFromWindow() {
+        sensorManager?.unregisterListener(sensorListener)
         super.onDetachedFromWindow()
         queueEvent { renderer.release() }
         stopAnimating()
@@ -266,5 +271,29 @@ class ArtFlow @JvmOverloads constructor(
     override fun setAlpha(alpha: Float) {
         Log.i("CoverFlow", "Setting global alpha to $alpha")
         renderer.setGlobalAlpha(alpha)
+    }
+
+    private var sensorManager: SensorManager? = null
+    private var rotationSensor: Sensor? = null
+
+    private val sensorListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent?) {
+            if (event != null && event.values.size >= 2) {
+                renderer.setTilt(event.values[1], event.values[0])
+            }
+        }
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (isInEditMode.invert()) {
+            sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
+            rotationSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+                    ?: sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+            rotationSensor?.let {
+                sensorManager?.registerListener(sensorListener, it, SensorManager.SENSOR_DELAY_GAME)
+            }
+        }
     }
 }

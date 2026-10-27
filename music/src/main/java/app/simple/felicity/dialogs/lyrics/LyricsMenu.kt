@@ -1,6 +1,12 @@
 package app.simple.felicity.dialogs.lyrics
 
+import android.app.PictureInPictureParams
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.util.Rational
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,11 +16,13 @@ import app.simple.felicity.R
 import app.simple.felicity.databinding.DialogLyricsMenuBinding
 import app.simple.felicity.decorations.seekbars.FelicitySeekbar
 import app.simple.felicity.decorations.toggles.FelicityButtonGroup.Companion.Button
+import app.simple.felicity.dialogs.lyrics.LyricsCardDialog.Companion.showLyricsCard
 import app.simple.felicity.engine.managers.MediaPlaybackManager
 import app.simple.felicity.extensions.dialogs.MediaBottomDialogFragment
 import app.simple.felicity.preferences.LyricsPreferences
 import app.simple.felicity.repository.models.Audio
 import app.simple.felicity.repository.utils.AudioUtils.hasLrc
+import app.simple.felicity.services.FloatingLyricsService
 import app.simple.felicity.shared.utils.ViewUtils.gone
 import app.simple.felicity.shared.utils.ViewUtils.visible
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +69,34 @@ class LyricsMenu : MediaBottomDialogFragment() {
 
         binding.textSizeSeekbar.setRightLabelProvider { progress, f1, f2 ->
             String.format(Locale.getDefault(), "%.1f px", progress)
+        }
+
+        binding.floatingLyrics.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(requireContext())) {
+                val intent = Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:${requireContext().packageName}")
+                )
+                startActivity(intent)
+            } else {
+                FloatingLyricsService.start(requireContext())
+            }
+            dismiss()
+        }
+
+        binding.shareLyricsCard.setOnClickListener {
+            parentFragmentManager.showLyricsCard()
+            dismiss()
+        }
+
+        binding.pipMode.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val params = PictureInPictureParams.Builder()
+                        .setAspectRatio(Rational(16, 9))
+                        .build()
+                activity?.enterPictureInPictureMode(params)
+            }
+            dismiss()
         }
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {

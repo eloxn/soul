@@ -10,6 +10,10 @@ object AudioPreferences {
 
     const val AUDIO_DECODER = "audio_decoder"
     const val GAPLESS_PLAYBACK = "gapless_playback"
+    const val CROSSFADE_DURATION = "crossfade_duration"
+    const val CROSSFADE_CURVE = "crossfade_curve"
+    const val CROSSFADE_CURVE_LINEAR = 0
+    const val CROSSFADE_CURVE_EQUAL_POWER = 1
     const val HIRES_OUTPUT = "hires_output"
     const val SKIP_SILENCE = "skip_silence"
     const val IS_STEREO_DOWNMIX_FORCED = "is_stereo_downmix_forced"
@@ -59,6 +63,24 @@ object AudioPreferences {
 
     fun isGaplessPlaybackEnabled(): Boolean {
         return SharedPreferences.getSharedPreferences().getBoolean(GAPLESS_PLAYBACK, true)
+    }
+
+    // --------------------------------------------------------------------------------------------- //
+
+    fun setCrossfadeDuration(seconds: Int) {
+        SharedPreferences.getSharedPreferences().edit { putInt(CROSSFADE_DURATION, seconds.coerceIn(0, 12)) }
+    }
+
+    fun getCrossfadeDuration(): Int {
+        return SharedPreferences.getSharedPreferences().getInt(CROSSFADE_DURATION, 0)
+    }
+
+    fun setCrossfadeCurve(curve: Int) {
+        SharedPreferences.getSharedPreferences().edit { putInt(CROSSFADE_CURVE, curve) }
+    }
+
+    fun getCrossfadeCurve(): Int {
+        return SharedPreferences.getSharedPreferences().getInt(CROSSFADE_CURVE, CROSSFADE_CURVE_EQUAL_POWER)
     }
 
     // --------------------------------------------------------------------------------------------- //

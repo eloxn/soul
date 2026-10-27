@@ -2,6 +2,7 @@ package app.simple.felicity.ui.subpanels
 
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.format.DateUtils
@@ -160,8 +161,30 @@ class LrcEditor : MediaFragment() {
             }
         }
 
+        binding.tapSync.setOnClickListener {
+            val stampedIndex = viewModel.tapSyncNext()
+            if (stampedIndex != -1) {
+                binding.entriesRecycler.smoothScrollToPosition(stampedIndex)
+                Toast.makeText(requireContext(), "Line ${stampedIndex + 1} synced", Toast.LENGTH_SHORT).show()
+            } else {
+                viewModel.resetTapSync()
+                Toast.makeText(requireContext(), "Tap-to-sync restarted from line 1", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         binding.save.setOnClickListener {
             viewModel.saveLrc()
+        }
+
+        binding.save.setOnLongClickListener {
+            val yaml = viewModel.generateYamlString()
+            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, yaml)
+                putExtra(Intent.EXTRA_SUBJECT, "${audio.getProperTitle()} Lyrics (LRCLIB)")
+            }
+            startActivity(Intent.createChooser(sendIntent, getString(R.string.export_yaml)))
+            true
         }
     }
 

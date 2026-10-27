@@ -20,6 +20,9 @@ import app.simple.felicity.extensions.viewmodels.WrappedViewModel
 import app.simple.felicity.models.LrcEntryModel
 import app.simple.felicity.repository.models.Audio
 import app.simple.felicity.repository.repositories.LrcRepository
+import app.simple.felicity.repository.utils.AudioUtils.getProperAlbum
+import app.simple.felicity.repository.utils.AudioUtils.getProperArtists
+import app.simple.felicity.repository.utils.AudioUtils.getProperTitle
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -203,6 +206,57 @@ class LrcEditorViewModel @AssistedInject constructor(
                 Log.e(TAG, "Exception while saving LRC", e)
             }
         }
+    }
+
+    private var tapSyncCurrentIndex = 0
+
+    fun resetTapSync() {
+        tapSyncCurrentIndex = 0
+    }
+
+    /**
+     * Real-time Tap-to-Sync: stamps the current playback position into the current active
+     * line in the tap-to-sync sequence, then advances the pointer to the next line.
+     *
+     * @return The index of the stamped line, or -1 when all lines have been stamped.
+     */
+    fun tapSyncNext(): Int {
+        val list = _entries.value ?: return -1
+        if (tapSyncCurrentIndex !in list.indices) return -1
+        val index = tapSyncCurrentIndex
+        list[index] = list[index].copy(timestampMs = currentPositionMs)
+        _entries.value = list
+        tapSyncCurrentIndex++
+        return index
+    }
+
+    fun getTapSyncIndex(): Int = tapSyncCurrentIndex
+
+    /**
+     * Serializes the current lyrics to LRCLIB-compliant YAML format.
+     */
+    fun generateYamlString(): String {
+        val entries = _entries.value ?: return ""
+        val sorted = entries.sortedBy { it.timestampMs }
+        val sb = StringBuilder()
+        sb.appendLine("trackName: \"${audio.getProperTitle().replace("\"", "\\\"")}\"")
+        sb.appendLine("artistName: \"${audio.getProperArtists().replace("\"", "\\\"")}\"")
+        sb.appendLine("albumName: \"${audio.getProperAlbum().replace("\"", "\\\"")}\"")
+        sb.appendLine("duration: ${(audio.duration / 1000)}")
+        sb.appendLine("instrumental: false")
+        sb.appendLine("plainLyrics: |")
+        for (entry in sorted) {
+            sb.append("  ").appendLine(entry.text)
+        }
+        sb.appendLine("syncedLyrics: |")
+        for (entry in sorted) {
+            val minutes = (entry.timestampMs / 60000).toInt()
+            val seconds = ((entry.timestampMs % 60000) / 1000).toInt()
+            val millis = ((entry.timestampMs % 1000) / 10).toInt()
+            val timeTag = String.format(java.util.Locale.US, "[%02d:%02d.%02d]", minutes, seconds, millis)
+            sb.append("  ").append(timeTag).append(" ").appendLine(entry.text)
+        }
+        return sb.toString()
     }
 
     private fun initLocalPlayer() {

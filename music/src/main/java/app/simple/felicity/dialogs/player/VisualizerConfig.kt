@@ -72,6 +72,12 @@ class VisualizerConfig : MediaBottomDialogFragment() {
                 dismiss()
             }
         }
+
+        binding.openShaderSandbox.setOnClickListener {
+            (parentFragment as MediaFragment).openShaderSandboxPanel().also {
+                dismiss()
+            }
+        }
     }
 
     companion object {

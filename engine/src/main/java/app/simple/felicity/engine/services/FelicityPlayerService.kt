@@ -50,6 +50,7 @@ import app.simple.felicity.engine.managers.AudioPipelineManager
 import app.simple.felicity.engine.managers.AudioProcessorManager
 import app.simple.felicity.engine.managers.EqualizerManager
 import app.simple.felicity.engine.managers.MediaPlaybackManager
+import app.simple.felicity.engine.managers.ScrobblerManager
 import app.simple.felicity.engine.managers.PlaybackStateManager
 import app.simple.felicity.engine.managers.VisualizerManager
 import app.simple.felicity.engine.model.AudioPipelineSnapshot
@@ -215,6 +216,8 @@ class FelicityPlayerService : MediaLibraryService(), SharedPreferences.OnSharedP
 
     /** Coroutine job that pushes a fresh [AudioPipelineSnapshot] every 3 seconds while playing. */
     private var snapshotPulseJob: Job? = null
+    /** Coroutine job that manages smart track crossfade easing. */
+    private var crossfadeJob: Job? = null
 
     /**
      * Debounce job that coalesces rapid-fire [buildAndPushSnapshot] calls into a single
@@ -878,13 +881,17 @@ class FelicityPlayerService : MediaLibraryService(), SharedPreferences.OnSharedP
                 MediaPlaybackManager.notifyPlaybackState(MediaConstants.PLAYBACK_PLAYING)
                 startPeriodicStateSaving()
                 startSnapshotPulse() // internally calls buildAndPushSnapshot() immediately, no need to call it again here
+                startCrossfadeMonitor()
                 broadcastWidgetUpdate()
+                ScrobblerManager.broadcastState(this@FelicityPlayerService, MediaPlaybackManager.getCurrentSong(), ScrobblerManager.STATE_RESUME, player.currentPosition)
             } else if (player.playbackState == Player.STATE_READY) {
                 MediaPlaybackManager.notifyPlaybackState(MediaConstants.PLAYBACK_PAUSED)
                 stopPeriodicStateSaving()
                 stopSnapshotPulse()
+                stopCrossfadeMonitor()
                 savePlaybackStateToDatabase() // Save immediately when paused
                 broadcastWidgetUpdate()
+                ScrobblerManager.broadcastState(this@FelicityPlayerService, MediaPlaybackManager.getCurrentSong(), ScrobblerManager.STATE_PAUSE, player.currentPosition)
             }
         }
 
@@ -959,6 +966,7 @@ class FelicityPlayerService : MediaLibraryService(), SharedPreferences.OnSharedP
                     if (PlayerPreferences.getRepeatMode() == MediaConstants.REPEAT_OFF) {
                         MediaPlaybackManager.handleQueueEnded()
                     }
+                    ScrobblerManager.broadcastState(this@FelicityPlayerService, MediaPlaybackManager.getCurrentSong(), ScrobblerManager.STATE_COMPLETE, currentItemDurationMs)
                     stopPeriodicStateSaving()
                     stopSnapshotPulse()
                     savePlaybackStateToDatabase()
@@ -1091,6 +1099,7 @@ class FelicityPlayerService : MediaLibraryService(), SharedPreferences.OnSharedP
                         val audio = audioRepository.getAudioById(audioId) ?: return@launch
                         songStatRepository.recordPlay(audio.hash)
                         Log.d(TAG, "Play recorded for: ${audio.title}")
+                        ScrobblerManager.broadcastState(this@FelicityPlayerService, audio, ScrobblerManager.STATE_START, 0L)
                         // When the user goes back to a song on purpose, that counts as a replay —
                         // it's their way of saying "that one was worth hearing again!"
                         if (isBackwardNavigation && reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) {
@@ -1289,6 +1298,15 @@ class FelicityPlayerService : MediaLibraryService(), SharedPreferences.OnSharedP
                 // Reconfigure gapless playback when preference changes
                 configureGaplessPlayback()
                 Log.d(TAG, "Gapless playback preference changed to: ${AudioPreferences.isGaplessPlaybackEnabled()}")
+            }
+            AudioPreferences.CROSSFADE_DURATION,
+            AudioPreferences.CROSSFADE_CURVE -> {
+                Log.d(TAG, "Crossfade preference changed: duration=${AudioPreferences.getCrossfadeDuration()}s, curve=${AudioPreferences.getCrossfadeCurve()}")
+                if (player.isPlaying) {
+                    startCrossfadeMonitor()
+                } else {
+                    stopCrossfadeMonitor()
+                }
             }
             AudioPreferences.SKIP_SILENCE -> {
                 setSilenceState()
@@ -1545,6 +1563,71 @@ class FelicityPlayerService : MediaLibraryService(), SharedPreferences.OnSharedP
         snapshotDebounceJob?.cancel()
         snapshotDebounceJob = null
         Log.d(TAG, "Stopped snapshot pulse")
+    }
+
+    /**
+     * Monitors playback position and applies smooth easing curves to [player.volume]
+     * during track transitions when smart crossfade is enabled.
+     */
+    private fun startCrossfadeMonitor() {
+        crossfadeJob?.cancel()
+        val durationSec = AudioPreferences.getCrossfadeDuration()
+        if (durationSec <= 0) {
+            player.volume = 1f
+            return
+        }
+
+        val crossfadeMs = durationSec * 1000L
+        val isLogarithmic = AudioPreferences.getCrossfadeCurve() == AudioPreferences.CROSSFADE_CURVE_EQUAL_POWER
+
+        crossfadeJob = serviceScope.launch(Dispatchers.Main.immediate) {
+            while (isActive && player.isPlaying) {
+                val duration = player.duration
+                val position = player.currentPosition
+
+                if (duration > 0 && crossfadeMs > 0) {
+                    val remainingMs = duration - position
+                    if (remainingMs in 0..crossfadeMs) {
+                        // Fade-out zone towards track end
+                        val progress = (remainingMs.toFloat() / crossfadeMs).coerceIn(0f, 1f)
+                        val vol = if (isLogarithmic) {
+                            kotlin.math.sin(progress * (Math.PI / 2.0)).toFloat()
+                        } else {
+                            progress
+                        }
+                        player.volume = vol.coerceIn(0f, 1f)
+                    } else if (position in 0..crossfadeMs) {
+                        // Fade-in zone at track start
+                        val progress = (position.toFloat() / crossfadeMs).coerceIn(0f, 1f)
+                        val vol = if (isLogarithmic) {
+                            kotlin.math.sin(progress * (Math.PI / 2.0)).toFloat()
+                        } else {
+                            progress
+                        }
+                        player.volume = vol.coerceIn(0f, 1f)
+                    } else {
+                        if (player.volume != 1f) {
+                            player.volume = 1f
+                        }
+                    }
+                } else {
+                    if (player.volume != 1f) {
+                        player.volume = 1f
+                    }
+                }
+                delay(100.milliseconds)
+            }
+        }
+        Log.d(TAG, "Started crossfade monitor (${durationSec}s, logarithmic=$isLogarithmic)")
+    }
+
+    private fun stopCrossfadeMonitor() {
+        crossfadeJob?.cancel()
+        crossfadeJob = null
+        if (player.volume != 1f) {
+            player.volume = 1f
+        }
+        Log.d(TAG, "Stopped crossfade monitor")
     }
 
     /**

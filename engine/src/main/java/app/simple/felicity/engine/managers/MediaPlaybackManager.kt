@@ -412,6 +412,21 @@ object MediaPlaybackManager {
     fun getCurrentSong(): Audio? = songs.getOrNull(currentSongPosition)
 
     /**
+     * Updates the active MediaSession / notification metadata subtitle with live text
+     * (e.g. current synchronized lyric line for Lock Screen and Ambient AOD display).
+     */
+    fun updateLiveSubtitle(subtitle: String?) {
+        val song = getCurrentSong() ?: return
+        mediaController?.let { controller ->
+            controller.playlistMetadata = MediaMetadata.Builder()
+                .setTitle(song.getProperTitle())
+                .setArtist(song.getProperArtists())
+                .setSubtitle(subtitle)
+                .build()
+        }
+    }
+
+    /**
      * Returns true if the given list has the exact same song IDs in the same order as the current queue.
      */
     fun isSameQueue(audios: List<Audio>): Boolean {
