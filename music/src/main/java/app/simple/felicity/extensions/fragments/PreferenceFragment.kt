@@ -1,12 +1,10 @@
 package app.simple.felicity.extensions.fragments
 
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.text.format.DateUtils
 import android.view.View
 import android.widget.TextView
-import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import app.simple.felicity.BuildConfig
 import app.simple.felicity.R
@@ -1395,28 +1393,10 @@ abstract class PreferenceFragment : MediaFragment() {
                 type = PreferenceType.INFO
         )
 
-        val socials = Preference(
-                title = R.string.socials,
-                type = PreferenceType.SUB_HEADER
-        )
-
-        val telegram = Preference(
-                title = R.string.telegram_channel,
-                summary = R.string.telegram_channel_summary,
-                icon = R.drawable.ic_telegram,
-                type = PreferenceType.LINK,
-                onPreferenceAction = { view, callback ->
-                    val intent = Intent(Intent.ACTION_VIEW, "https://t.me/felicity_music_player".toUri())
-                    startActivity(intent)
-                }
-        )
-
         preferences.add(appHeader)
         preferences.add(appVersion)
         preferences.add(creditsHeader)
         preferences.add(eloxxnCredit)
-        preferences.add(socials)
-        preferences.add(telegram)
 
         return preferences
     }
