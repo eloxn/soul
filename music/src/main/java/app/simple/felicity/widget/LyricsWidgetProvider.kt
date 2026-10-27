@@ -25,7 +25,7 @@ class LyricsWidgetProvider : BaseWidgetProvider() {
         views.setTextViewText(R.id.widget_title, scope.title)
         views.setTextViewText(R.id.widget_artist, scope.artist)
         views.setTextColor(R.id.widget_title, Color.WHITE)
-        views.setTextColor(R.id.widget_artist, Color.parseColor("#E0E0E0"))
+        views.setTextColor(R.id.widget_artist, Color.LTGRAY)
 
         // Play/Pause icon swap
         val playPauseRes = if (scope.isPlaying) R.drawable.ic_pause else R.drawable.ic_play
