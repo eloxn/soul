@@ -418,11 +418,16 @@ object MediaPlaybackManager {
     fun updateLiveSubtitle(subtitle: String?) {
         val song = getCurrentSong() ?: return
         mediaController?.let { controller ->
-            controller.playlistMetadata = MediaMetadata.Builder()
+            val builder = MediaMetadata.Builder()
                 .setTitle(song.getProperTitle())
                 .setArtist(song.getProperArtists())
-                .setSubtitle(subtitle)
-                .build()
+            if (!subtitle.isNullOrBlank()) {
+                builder.setSubtitle(subtitle)
+                builder.setDescription(subtitle)
+            } else {
+                builder.setSubtitle(song.getProperAlbum())
+            }
+            controller.playlistMetadata = builder.build()
         }
     }
 

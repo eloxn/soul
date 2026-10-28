@@ -229,6 +229,16 @@
             app:textColorStyle="primary" />
 
         <app.simple.felicity.decorations.ripple.DynamicRippleTextView
+            android:id="@+id/aod_mode"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="@dimen/padding_15"
+            android:text="@string/aod_lyrics"
+            android:textSize="@dimen/text_size_14"
+            app:appFontStyle="bold"
+            app:textColorStyle="primary" />
+
+        <app.simple.felicity.decorations.ripple.DynamicRippleTextView
             android:id="@+id/add_lyrics"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

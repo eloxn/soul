@@ -55,6 +55,13 @@
             android:name=".activities.CrashReporterActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".activities.AodLyricsActivity"
+            android:exported="false"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
+
         <service
             android:name=".repository.services.AudioDatabaseService"
             android:exported="false" />

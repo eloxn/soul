@@ -118,6 +118,7 @@ class LyricsManager @Inject constructor(
         scope.launch {
             MediaPlaybackManager.songPositionFlow.collect {
                 lastActiveSubtitle = null
+                MediaPlaybackManager.updateLiveSubtitle(null)
                 loadLrcData()
             }
         }

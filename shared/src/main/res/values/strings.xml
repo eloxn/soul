@@ -563,8 +563,11 @@
     <string name="gyroscope_parallax_summary">Tilt phone to dynamically shift 3D camera angles and lighting reflection vectors.</string>
     <string name="touch_physics">Touch &amp; Particle Physics</string>
     <string name="touch_physics_summary">Drag, flick, or tap the 3D visualizer to trigger momentum spins and particle shockwaves.</string>
-    <string name="lock_screen_lyrics">Lock Screen / AOD Lyrics</string>
-    <string name="lock_screen_lyrics_summary">Render a battery-friendly monochrome lyrics preview on the lock screen and ambient display.</string>
+    <string name="lock_screen_lyrics">Lock Screen / AOD Subtitles</string>
+    <string name="lock_screen_lyrics_summary">Render a battery-friendly monochrome lyrics preview on the lock screen and ambient media card.</string>
+    <string name="aod_lyrics">Always-On Display (AOD) Lyrics</string>
+    <string name="aod_lyrics_summary">OLED pitch-black ambient display with live synced lyrics, minimal clock, and burn-in protection.</string>
+    <string name="double_tap_to_exit">Double tap anywhere to exit AOD</string>
     <string name="off">Off</string>
     <string name="battery_saver_3d">3D Battery Saver</string>
     <string name="battery_saver_3d_summary">Cap 3D rendering at 30 FPS and lower viewport resolution to reduce power draw.</string>

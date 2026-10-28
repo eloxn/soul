@@ -1467,6 +1467,31 @@ abstract class PreferenceFragment : MediaFragment() {
                 }
         )
 
+        val aodHeader = Preference(type = PreferenceType.SUB_HEADER, title = R.string.aod_lyrics)
+
+        val launchAod = Preference(
+                title = R.string.aod_lyrics,
+                summary = R.string.aod_lyrics_summary,
+                icon = R.drawable.ic_keep_screen_on,
+                type = PreferenceType.NORMAL,
+                onPreferenceAction = { _, _ ->
+                    app.simple.felicity.activities.AodLyricsActivity.launch(requireContext())
+                }
+        )
+
+        val lockScreenLyrics = Preference(
+                title = R.string.lock_screen_lyrics,
+                summary = R.string.lock_screen_lyrics_summary,
+                icon = R.drawable.ic_lyrics,
+                type = PreferenceType.SWITCH,
+                onPreferenceAction = { view, _ ->
+                    app.simple.felicity.preferences.LyricsPreferences.setLockScreenLyrics((view as FelicitySwitch).isChecked)
+                },
+                valueProvider = Supplier {
+                    app.simple.felicity.preferences.LyricsPreferences.isLockScreenLyricsEnabled()
+                }
+        )
+
         preferences.add(userInterfaceHeader)
         preferences.add(divider)
         preferences.add(highlightClickedElement)
@@ -1480,6 +1505,9 @@ abstract class PreferenceFragment : MediaFragment() {
         preferences.add(gyroscopeParallax)
         preferences.add(beatCam)
         preferences.add(touchPhysics)
+        preferences.add(aodHeader)
+        preferences.add(launchAod)
+        preferences.add(lockScreenLyrics)
 
         return preferences
     }

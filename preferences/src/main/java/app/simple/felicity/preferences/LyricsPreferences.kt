@@ -60,6 +60,8 @@ object LyricsPreferences {
     }
 
     const val LOCK_SCREEN_LYRICS = "lyrics_lock_screen_lyrics"
+    const val AOD_DIM_BRIGHTNESS = "aod_dim_brightness"
+    const val AOD_ANTI_BURN_IN = "aod_anti_burn_in"
 
     fun setLockScreenLyrics(enabled: Boolean) {
         SharedPreferences.getSharedPreferences().edit {
@@ -69,5 +71,25 @@ object LyricsPreferences {
 
     fun isLockScreenLyricsEnabled(): Boolean {
         return SharedPreferences.getSharedPreferences().getBoolean(LOCK_SCREEN_LYRICS, true)
+    }
+
+    fun setAodDimBrightness(enabled: Boolean) {
+        SharedPreferences.getSharedPreferences().edit {
+            putBoolean(AOD_DIM_BRIGHTNESS, enabled)
+        }
+    }
+
+    fun isAodDimBrightness(): Boolean {
+        return SharedPreferences.getSharedPreferences().getBoolean(AOD_DIM_BRIGHTNESS, true)
+    }
+
+    fun setAodAntiBurnIn(enabled: Boolean) {
+        SharedPreferences.getSharedPreferences().edit {
+            putBoolean(AOD_ANTI_BURN_IN, enabled)
+        }
+    }
+
+    fun isAodAntiBurnIn(): Boolean {
+        return SharedPreferences.getSharedPreferences().getBoolean(AOD_ANTI_BURN_IN, true)
     }
 }

@@ -99,6 +99,11 @@ class LyricsMenu : MediaBottomDialogFragment() {
             dismiss()
         }
 
+        binding.aodMode.setOnClickListener {
+            app.simple.felicity.activities.AodLyricsActivity.launch(requireContext())
+            dismiss()
+        }
+
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             val hasLrc = audio?.hasLrc(requireContext()) ?: false
             launch(Dispatchers.Main) {
