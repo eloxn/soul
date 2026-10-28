@@ -9,8 +9,8 @@
 Created with ❤️ by **[Eloxxn](https://github.com/eloxn)**
 
 <p align="center">
-  <a href="https://github.com/eloxn/soul/releases/latest/download/Soul-v1.0.1.apk">
-    <img src="https://img.shields.io/badge/Download-Soul%20APK%20(v1.0.1)-blue?style=for-the-badge&logo=android&logoColor=white" alt="Download Soul APK" />
+  <a href="https://github.com/eloxn/soul/releases/latest/download/Soul-v2.0.0.apk">
+    <img src="https://img.shields.io/badge/Download-Soul%20APK%20(v2.0.0)-blue?style=for-the-badge&logo=android&logoColor=white" alt="Download Soul APK" />
   </a>
 </p>
 
@@ -27,7 +27,7 @@ Created with ❤️ by **[Eloxxn](https://github.com/eloxn)**
 
 You can download the latest signed release APK directly using the link below:
 
-👉 **[Download Soul v1.0.1 APK](https://github.com/eloxn/soul/releases/download/v1.0.1/Soul-v1.0.1.apk)** *(39.3 MB • Signed with Scheme v2)*
+👉 **[Download Soul v2.0.0 APK](https://github.com/eloxn/soul/releases/download/v2.0.0/Soul-v2.0.0.apk)** *(Signed with Scheme v2/v3)*
 
 All release notes and assets are also available on the **[Releases Page](https://github.com/eloxn/soul/releases)**.
 
@@ -46,21 +46,30 @@ Soul is **100% free and open-source** — no subscriptions, no ads, no paywalls,
 ### 🎧 Custom C++ Audio Engine & DSP
 - **Dual Decoder:** Seamless combination of hardware decoding and software decoding through FFmpeg.
 - **Audiophile High-Res Support:** Native playback for FLAC, ALAC, DSD, WAV, MP3, AAC, and multi-channel audio (5.1 and 7.1).
-- **10-Band Equalizer:** Precision 10-band EQ with +/-15 dB adjustment and customizable PreAmp.
+- **10-Band Equalizer & AutoEQ:** Precision 10-band EQ with +/-15 dB adjustment, PreAmp control, and automatic AutoEQ profile loading for thousands of headphones.
+- **ReplayGain & EBU R128:** Track and album gain normalization preventing abrupt loudness jumps across albums and playlists.
 - **Hardware Acceleration:** Native DSP audio processing utilizes ARM NEON SIMD auto-vectorization for near-zero CPU overhead and battery conservation.
 - **Advanced Sound Effects:** Built-in Bass Boost, Treble adjustment, Reverb, Stereo Widening, and Tape Saturation for an authentic analog warmth.
-- **Gapless Playback:** Uninterrupted transitions between tracks.
-- **Real-Time Visualizers:**
-  - Real-time Milkdrop visualizer rendering on GL surface at native display refresh rates.
-  - Ultra-fast Canvas spectrum visualizer powered by a native PFFFT implementation.
+- **Gapless & Smart Crossfade:** Uninterrupted transitions between tracks with customizable crossfade easing curves (0–12s).
+- **3D & Canvas Visualizers:**
+  - Custom GLSL Shader Sandbox with real-time fragment compiler and audio-reactive uniforms.
+  - Gyroscope Parallax, Orbit turntable mode, and Beat-Cam transient response.
+  - Intelligent 3D Battery Saver capping frame rates and scaling resolution dynamically.
+  - Real-time Milkdrop visualizer and ultra-fast Canvas spectrum powered by PFFFT.
 
-### 🎨 Modern & Dynamic UI
-- **Live Synced Lyrics Widget:** Interactive home screen widget showing active synchronized lyrics with previous/current/upcoming line previews and media controls.
-- **Album Art Theming:** Interface dynamically adapts its palette to match the artwork of the currently playing track.
-- **Material You & Custom Themes:** Full support for Android 12+ Monet dynamic theming alongside AMOLED Dark, Slate, Oil, and Light themes.
-- **Edge-to-Edge:** Native predictive back animations, gesture navigation, and edge-to-edge layouts.
-- **Synchronized Lyrics:** Instant LRC extraction from embedded tags and automatic online lyrics retrieval via LrcLib.
-- **Dual Fast Scroll:** Jump to letters quickly or drag smoothly through large music libraries.
+### 🎨 Modern UI & Lyrics Ecosystem
+- **Floating & Overlay Lyrics:** Draggable, translucent lyrics pill over any app and PiP (Picture-in-Picture) playback.
+- **Dual-Language & Transliteration:** Secondary translation and Romaji/Pinyin tracks rendered synchronously.
+- **Lyrics Card Generator:** Highlight stanzas with blurred album art or 3D scene backdrops and export custom graphics for social sharing.
+- **Tap-to-Sync Offline Editor:** Record real-time lyric timestamps on the fly and export standard `.lrc` or LRCLIB YAML files.
+- **Live Synced Lyrics Widget:** Interactive home screen widget showing active synchronized lyrics with media controls.
+- **Album Art Theming & Monet:** Full support for Android 12+ Monet dynamic palettes alongside AMOLED Dark, Slate, Oil, and Light themes.
+- **Edge-to-Edge Experience:** Native predictive back animations, gesture navigation, and edge-to-edge layouts.
+
+### 🚗 Modern OS Integrations
+- **Android Auto:** Full MediaLibraryService browse tree for car infotainment displays with driving-safe controls.
+- **Scrobbling Support:** Broadcasts standard playback intents for Last.fm, Pano Scrobbler, and Simple Scrobbler.
+- **Lock Screen & AOD:** Low-overhead live lyrics preview on Always-on-Display and lock screen.
 
 ### 📂 Smart Library Management
 - **Instant Auto-Scan:** Automatically recognizes additions and deletions in your media storage in real-time.

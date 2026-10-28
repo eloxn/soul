@@ -1,0 +1,8 @@
+Soul v2.0.0 - Major Release
+
+- High-Precision Audio Engine: AutoEQ parametric EQ profile importer, Bit-Perfect USB DAC bypass, smart crossfade (0-12s) with custom curves, gapless playback, and ReplayGain / EBU R128 loudness volume normalization.
+- Lyrics & Subtitle Ecosystem: Dual-language & Romaji/Pinyin transliteration tracks, real-time tap-to-sync timestamp recorder & LRCLIB YAML export, floating/overlay draggable lyrics pill, Picture-in-Picture mode, and social lyrics card generator.
+- 3D Visualizer & Immersion: Custom GLSL Shader Sandbox with live fragment compiler, Orbit turntable mode, Beat-Cam transient zoom/shake, and gyroscope parallax camera tilt with holographic sheen.
+- Modern Android OS Integrations: Android Auto infotainment support, lock screen & AOD live subtitles, and standard Scrobbler broadcasts (Last.fm, Pano).
+- Performance & Efficiency: Intelligent 3D Battery Saver mode (30 FPS cap and resolution scaling).
+
