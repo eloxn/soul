@@ -47,6 +47,21 @@ class VisualizerConfig : MediaBottomDialogFragment() {
         binding.batterySaverToggle.setOnCheckedChangeListener { _, isChecked ->
             VisualizerPreferences.set3dBatterySaverEnabled(isChecked)
         }
+
+        binding.gyroscopeToggle.isChecked = VisualizerPreferences.isGyroscopeEnabled()
+        binding.gyroscopeToggle.setOnCheckedChangeListener { _, isChecked ->
+            VisualizerPreferences.setGyroscopeEnabled(isChecked)
+        }
+
+        binding.beatCamToggle.isChecked = VisualizerPreferences.isBeatCamEnabled()
+        binding.beatCamToggle.setOnCheckedChangeListener { _, isChecked ->
+            VisualizerPreferences.setBeatCamEnabled(isChecked)
+        }
+
+        binding.touchPhysicsToggle.isChecked = VisualizerPreferences.isTouchPhysicsEnabled()
+        binding.touchPhysicsToggle.setOnCheckedChangeListener { _, isChecked ->
+            VisualizerPreferences.setTouchPhysicsEnabled(isChecked)
+        }
     }
 
     fun updateVizStyleState() {

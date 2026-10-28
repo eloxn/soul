@@ -290,7 +290,11 @@ class ArtFlow @JvmOverloads constructor(
     private val sensorListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             if (event != null && event.values.size >= 2) {
-                renderer.setTilt(event.values[1], event.values[0])
+                if (app.simple.felicity.preferences.VisualizerPreferences.isGyroscopeEnabled()) {
+                    renderer.setTilt(event.values[1], event.values[0])
+                } else {
+                    renderer.setTilt(0f, 0f)
+                }
             }
         }
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}

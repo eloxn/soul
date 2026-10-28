@@ -58,6 +58,8 @@ import app.simple.felicity.repository.managers.SelectionManager
 import app.simple.felicity.repository.models.Audio
 import app.simple.felicity.repository.repositories.AudioRepository
 import app.simple.felicity.repository.repositories.LrcRepository
+import app.simple.felicity.decorations.lrc.model.LrcData
+import kotlinx.coroutines.Job
 import app.simple.felicity.repository.services.AudioDatabaseService
 import app.simple.felicity.repository.utils.AudioUtils.getProperArtists
 import app.simple.felicity.repository.utils.AudioUtils.getProperTitle
@@ -636,12 +638,100 @@ class MainActivity : BaseActivity(), MiniPlayerCallbacks {
         binding.miniPlayer.hide(animated = true)
     }
 
+    private var pipLyricsJob: Job? = null
+    private var pipCachedLrc: LrcData? = null
+    private var pipLastLineIndex: Int = -2
+
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         if (isInPictureInPictureMode) {
             binding.miniPlayer.hide(animated = false)
+            binding.fragmentContainer.visibility = View.GONE
+            binding.miniPlayerActionBar.visibility = View.GONE
+            binding.pipLyricsContainer.visibility = View.VISIBLE
+            setupPipLyricsObserver()
         } else {
+            pipLyricsJob?.cancel()
+            binding.pipLyricsContainer.visibility = View.GONE
+            binding.fragmentContainer.visibility = View.VISIBLE
             onStateReady()
+        }
+    }
+
+    private fun setupPipLyricsObserver() {
+        pipLyricsJob?.cancel()
+        pipLyricsJob = lifecycleScope.launch {
+            val song = MediaPlaybackManager.getCurrentSong()
+            updatePipSongInfo(song)
+
+            launch {
+                MediaPlaybackManager.songPositionFlow.collect {
+                    val current = MediaPlaybackManager.getCurrentSong()
+                    updatePipSongInfo(current)
+                }
+            }
+
+            launch {
+                LyricsManager.activeLrcDataFlow.collect { data ->
+                    if (data != null && !data.isEmpty) {
+                        pipCachedLrc = data
+                        updatePipLyric(MediaPlaybackManager.getSeekPosition())
+                    }
+                }
+            }
+
+            launch {
+                MediaPlaybackManager.songSeekPositionFlow.collect { posMs ->
+                    updatePipLyric(posMs)
+                }
+            }
+        }
+    }
+
+    private fun updatePipSongInfo(song: Audio?) {
+        if (song == null) {
+            binding.pipTitle.text = "Soul"
+            binding.pipArtist.text = ""
+            binding.pipActiveLyric.text = "♪ No song playing"
+            return
+        }
+        binding.pipTitle.text = song.getProperTitle()
+        binding.pipArtist.text = song.getProperArtists()
+        loadArtIntoBitmap(song) { bmp ->
+            binding.pipAlbumArt.setImageBitmap(bmp)
+        }
+        lifecycleScope.launch(Dispatchers.IO) {
+            val lrc = LyricsWidgetManager.loadLrc(this@MainActivity, song)
+                ?: LyricsManager.activeLrcDataFlow.value
+            withContext(Dispatchers.Main) {
+                pipCachedLrc = lrc
+                updatePipLyric(MediaPlaybackManager.getSeekPosition())
+            }
+        }
+    }
+
+    private fun updatePipLyric(posMs: Long) {
+        val lrc = pipCachedLrc
+        if (lrc == null || lrc.isEmpty) {
+            binding.pipActiveLyric.text = "♪ No synced lyrics"
+            return
+        }
+        val entries = lrc.entries
+        var index = -1
+        for (i in entries.indices) {
+            if (posMs + lrc.offset >= entries[i].timeInMillis) {
+                index = i
+            } else {
+                break
+            }
+        }
+        if (index == pipLastLineIndex) return
+        pipLastLineIndex = index
+        if (index in 0 until entries.size) {
+            val text = entries[index].text.trim()
+            binding.pipActiveLyric.text = if (text.isNotBlank()) text else "♪"
+        } else {
+            binding.pipActiveLyric.text = "♪ ..."
         }
     }
 

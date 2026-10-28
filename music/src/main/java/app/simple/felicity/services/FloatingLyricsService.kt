@@ -10,6 +10,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
+import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.MotionEvent
@@ -19,8 +20,14 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import app.simple.felicity.decorations.lrc.model.LrcData
+import app.simple.felicity.decorations.lrc.model.LrcEntry
 import app.simple.felicity.engine.managers.MediaPlaybackManager
 import app.simple.felicity.managers.LyricsManager
+import app.simple.felicity.repository.constants.MediaConstants
+import app.simple.felicity.repository.models.Audio
+import app.simple.felicity.repository.utils.AudioUtils.getProperArtists
+import app.simple.felicity.repository.utils.AudioUtils.getProperTitle
+import app.simple.felicity.widget.LyricsWidgetManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -44,8 +51,12 @@ class FloatingLyricsService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private var currentLrcData: LrcData? = null
-    private var lyricsTextView: TextView? = null
+    private var currentSongId: Long = -1L
+    private var lastLineIndex: Int = -2
+
     private var titleTextView: TextView? = null
+    private var lyricsTextView: TextView? = null
+    private var playPauseButton: ImageButton? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -72,34 +83,55 @@ class FloatingLyricsService : Service() {
                 PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 80
+            x = 60
             y = 200
         }
 
         val pillLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            val pad = dpToPx(12)
-            setPadding(pad, dpToPx(8), pad, dpToPx(8))
+            val padH = dpToPx(16)
+            val padV = dpToPx(10)
+            setPadding(padH, padV, padH, padV)
             val bg = GradientDrawable().apply {
-                setColor(0xCC1A1A1A.toInt()) // Semi-transparent sleek dark pill
-                cornerRadius = dpToPx(16).toFloat()
+                setColor(0xE6141418.toInt()) // Sleek frosted dark pill
+                cornerRadius = dpToPx(20).toFloat()
                 setStroke(dpToPx(1), 0x33FFFFFF.toInt())
             }
             background = bg
         }
 
+        // Top Row: Title + Controls
         val topRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
+            val p = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            layoutParams = p
         }
 
         titleTextView = TextView(this).apply {
             text = "Soul Lyrics"
-            setTextColor(0xFFCCCCCC.toInt())
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-            val p = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            layoutParams = p
+            setTextColor(0xFF9E9E9E.toInt())
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
             maxLines = 1
+            ellipsize = TextUtils.TruncateAt.END
+            val p = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            p.marginEnd = dpToPx(8)
+            layoutParams = p
+        }
+
+        playPauseButton = ImageButton(this).apply {
+            setImageResource(android.R.drawable.ic_media_pause)
+            setBackgroundColor(Color.TRANSPARENT)
+            setColorFilter(0xFFCCCCCC.toInt())
+            setOnClickListener {
+                MediaPlaybackManager.flipState()
+            }
+            val p = LinearLayout.LayoutParams(dpToPx(22), dpToPx(22))
+            p.marginEnd = dpToPx(8)
+            layoutParams = p
         }
 
         val closeButton = ImageButton(this).apply {
@@ -107,19 +139,23 @@ class FloatingLyricsService : Service() {
             setBackgroundColor(Color.TRANSPARENT)
             setColorFilter(0xFFAAAAAA.toInt())
             setOnClickListener { stopSelf() }
-            val p = LinearLayout.LayoutParams(dpToPx(24), dpToPx(24))
+            val p = LinearLayout.LayoutParams(dpToPx(22), dpToPx(22))
             layoutParams = p
         }
 
         topRow.addView(titleTextView)
+        topRow.addView(playPauseButton)
         topRow.addView(closeButton)
         pillLayout.addView(topRow)
 
+        // Bottom Row: Active Lyric Text
         lyricsTextView = TextView(this).apply {
             text = "♪ ..."
             setTextColor(Color.WHITE)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
-            maxLines = 2
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            maxLines = 3
+            ellipsize = TextUtils.TruncateAt.END
             setPadding(0, dpToPx(4), 0, 0)
         }
         pillLayout.addView(lyricsTextView)
@@ -130,6 +166,7 @@ class FloatingLyricsService : Service() {
             private var initialY = 0
             private var initialTouchX = 0f
             private var initialTouchY = 0f
+            private var isDragging = false
 
             override fun onTouch(v: View, event: MotionEvent): Boolean {
                 when (event.action) {
@@ -138,13 +175,19 @@ class FloatingLyricsService : Service() {
                         initialY = params.y
                         initialTouchX = event.rawX
                         initialTouchY = event.rawY
-                        return true
+                        isDragging = false
+                        return false
                     }
                     MotionEvent.ACTION_MOVE -> {
-                        params.x = initialX + (event.rawX - initialTouchX).toInt()
-                        params.y = initialY + (event.rawY - initialTouchY).toInt()
-                        windowManager?.updateViewLayout(pillLayout, params)
-                        return true
+                        val dx = (event.rawX - initialTouchX).toInt()
+                        val dy = (event.rawY - initialTouchY).toInt()
+                        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                            isDragging = true
+                            params.x = initialX + dx
+                            params.y = initialY + dy
+                            windowManager?.updateViewLayout(pillLayout, params)
+                            return true
+                        }
                     }
                 }
                 return false
@@ -154,36 +197,106 @@ class FloatingLyricsService : Service() {
         overlayView = pillLayout
         windowManager?.addView(overlayView, params)
 
-        observeLyrics()
+        observePlaybackAndLyrics()
     }
 
-    private fun observeLyrics() {
+    private fun observePlaybackAndLyrics() {
+        // 1. Observe song changes
         serviceScope.launch {
-            LyricsManager.activeLrcDataFlow.collectLatest { data ->
-                currentLrcData = data
+            MediaPlaybackManager.songPositionFlow.collectLatest {
                 val song = MediaPlaybackManager.getCurrentSong()
-                titleTextView?.text = song?.title ?: "Soul"
+                handleSongChanged(song)
             }
         }
 
+        // 2. Observe lyrics data updates
         serviceScope.launch {
-            MediaPlaybackManager.songPositionFlow.collectLatest { pos ->
-                val lrc = currentLrcData
-                if (lrc != null && lrc.entries.isNotEmpty()) {
-                    var currentLine: String? = null
-                    for (entry in lrc.entries) {
-                        if (entry.timeInMillis <= pos) {
-                            currentLine = entry.text
-                        } else {
-                            break
-                        }
-                    }
-                    lyricsTextView?.text = currentLine ?: "♪"
-                } else {
-                    lyricsTextView?.text = "♪ No lyrics"
+            LyricsManager.activeLrcDataFlow.collectLatest { data ->
+                if (data != null && !data.isEmpty) {
+                    currentLrcData = data
+                    lastLineIndex = -2
+                    updateLyricForPosition(MediaPlaybackManager.getSeekPosition())
                 }
             }
         }
+
+        // 3. Observe real-time seek progress in milliseconds
+        serviceScope.launch {
+            MediaPlaybackManager.songSeekPositionFlow.collectLatest { positionMs ->
+                updateLyricForPosition(positionMs)
+            }
+        }
+
+        // 4. Observe playback state (playing vs paused)
+        serviceScope.launch {
+            MediaPlaybackManager.playbackStateFlow.collectLatest { state ->
+                when (state) {
+                    MediaConstants.PLAYBACK_PLAYING -> {
+                        playPauseButton?.setImageResource(android.R.drawable.ic_media_pause)
+                    }
+                    else -> {
+                        playPauseButton?.setImageResource(android.R.drawable.ic_media_play)
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun handleSongChanged(song: Audio?) {
+        if (song == null) {
+            currentLrcData = null
+            currentSongId = -1L
+            lastLineIndex = -2
+            titleTextView?.text = "Soul"
+            lyricsTextView?.text = "♪ No song playing"
+            return
+        }
+
+        titleTextView?.text = "${song.getProperTitle()} • ${song.getProperArtists()}"
+
+        if (song.id != currentSongId) {
+            currentSongId = song.id
+            lastLineIndex = -2
+            currentLrcData = LyricsWidgetManager.loadLrc(this@FloatingLyricsService, song)
+                    ?: LyricsManager.activeLrcDataFlow.value
+            updateLyricForPosition(MediaPlaybackManager.getSeekPosition())
+        }
+    }
+
+    private fun updateLyricForPosition(positionMs: Long) {
+        val lrc = currentLrcData
+        if (lrc == null || lrc.isEmpty) {
+            if (lastLineIndex != -1) {
+                lastLineIndex = -1
+                lyricsTextView?.text = "♪ No synced lyrics"
+            }
+            return
+        }
+
+        val entries = lrc.entries
+        val lineIndex = findLineIndex(entries, positionMs + lrc.offset)
+        if (lineIndex == lastLineIndex) return
+        lastLineIndex = lineIndex
+
+        if (lineIndex in 0 until entries.size) {
+            val entry = entries[lineIndex]
+            val text = entry.text.trim()
+            lyricsTextView?.text = if (text.isNotBlank()) text else "♪"
+        } else {
+            lyricsTextView?.text = "♪ ..."
+        }
+    }
+
+    private fun findLineIndex(entries: List<LrcEntry>, timeMs: Long): Int {
+        var index = -1
+        for (i in entries.indices) {
+            if (timeMs >= entries[i].timeInMillis) {
+                index = i
+            } else {
+                break
+            }
+        }
+        return index
     }
 
     override fun onDestroy() {
@@ -207,4 +320,3 @@ class FloatingLyricsService : Service() {
         }
     }
 }
-

@@ -49,8 +49,16 @@ class ShaderSandboxView @JvmOverloads constructor(
     private val renderer: ShaderRenderer
 
     var orbitModeEnabled = true
-    var beatCamEnabled = true
-    var gyroscopeEnabled = true
+    var beatCamEnabled: Boolean
+        get() = app.simple.felicity.preferences.VisualizerPreferences.isBeatCamEnabled()
+        set(value) {
+            app.simple.felicity.preferences.VisualizerPreferences.setBeatCamEnabled(value)
+        }
+    var gyroscopeEnabled: Boolean
+        get() = app.simple.felicity.preferences.VisualizerPreferences.isGyroscopeEnabled()
+        set(value) {
+            app.simple.felicity.preferences.VisualizerPreferences.setGyroscopeEnabled(value)
+        }
 
     private var sensorManager: SensorManager? = null
     private var rotationSensor: Sensor? = null
@@ -93,6 +101,9 @@ class ShaderSandboxView @JvmOverloads constructor(
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (!app.simple.felicity.preferences.VisualizerPreferences.isTouchPhysicsEnabled()) {
+            return super.onTouchEvent(event)
+        }
         if (velocityTracker == null) velocityTracker = VelocityTracker.obtain()
         velocityTracker?.addMovement(event)
 

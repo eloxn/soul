@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
@@ -13,6 +14,7 @@ import android.os.Bundle
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -308,20 +310,63 @@ class LyricsCardDialog : MediaBottomDialogFragment() {
             staticLayout.draw(canvas)
             canvas.restore()
 
-            // Draw Track & Artist Information
+            // Draw Album Art and Track Information
+            val artSize = 130f
+            val artLeft = 140f
+            val artTop = (height - 310).toFloat()
+            val artRect = RectF(artLeft, artTop, artLeft + artSize, artTop + artSize)
+
+            // Draw Album Art thumbnail with rounded corners
+            if (coverBitmap != null) {
+                val path = Path().apply {
+                    addRoundRect(artRect, 24f, 24f, Path.Direction.CW)
+                }
+                canvas.save()
+                canvas.clipPath(path)
+                val scaledArt = Bitmap.createScaledBitmap(coverBitmap!!, artSize.toInt(), artSize.toInt(), true)
+                canvas.drawBitmap(scaledArt, artLeft, artTop, Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+                canvas.restore()
+
+                // Subtle border around album art
+                val artBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = borderColor
+                    style = Paint.Style.STROKE
+                    strokeWidth = 2f
+                }
+                canvas.drawRoundRect(artRect, 24f, 24f, artBorderPaint)
+            } else {
+                // Fallback placeholder card if no cover
+                val fallbackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = if (isLightEditorial) 0x1A000000.toInt() else 0x33FFFFFF.toInt()
+                }
+                canvas.drawRoundRect(artRect, 24f, 24f, fallbackPaint)
+                val notePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = secondaryTextColor
+                    textSize = 50f
+                    textAlign = Paint.Align.CENTER
+                }
+                canvas.drawText("♪", artRect.centerX(), artRect.centerY() + 18f, notePaint)
+            }
+
+            // Draw Track & Artist Information (aligned nicely to the right of the album art)
+            val textLeft = artLeft + artSize + 28f
+            val maxTextWidth = (width - 140f) - textLeft - 180f
+
             val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = primaryTextColor
                 textSize = 38f
                 typeface = Typeface.DEFAULT_BOLD
             }
-            canvas.drawText(song.getProperTitle(), 140f, (height - 240).toFloat(), titlePaint)
+            val titleText = TextUtils.ellipsize(song.getProperTitle(), titlePaint, maxTextWidth, TextUtils.TruncateAt.END).toString()
+            canvas.drawText(titleText, textLeft, artTop + 54f, titlePaint)
 
             val artistPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = secondaryTextColor
                 textSize = 30f
                 typeface = Typeface.DEFAULT
             }
-            canvas.drawText(song.getProperArtists(), 140f, (height - 185).toFloat(), artistPaint)
+            val artistText = TextUtils.ellipsize(song.getProperArtists(), artistPaint, maxTextWidth, TextUtils.TruncateAt.END).toString()
+            canvas.drawText(artistText, textLeft, artTop + 106f, artistPaint)
 
             // Soul Watermark / Branding
             val badgePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -330,7 +375,7 @@ class LyricsCardDialog : MediaBottomDialogFragment() {
                 typeface = Typeface.DEFAULT_BOLD
                 textAlign = Paint.Align.RIGHT
             }
-            canvas.drawText("SOUL MUSIC", (width - 140).toFloat(), (height - 185).toFloat(), badgePaint)
+            canvas.drawText("SOUL MUSIC", (width - 140).toFloat(), artTop + 106f, badgePaint)
 
             generatedCardBitmap = bitmap
             withContext(Dispatchers.Main) {

@@ -268,8 +268,13 @@ class FelicityVisualizer @JvmOverloads constructor(
     private val sensorListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             if (event != null && event.values.size >= 2) {
-                tiltX = (event.values[1] * 0.15f).coerceIn(-1.2f, 1.2f)
-                tiltY = (event.values[0] * 0.15f).coerceIn(-1.2f, 1.2f)
+                if (VisualizerPreferences.isGyroscopeEnabled()) {
+                    tiltX = (event.values[1] * 0.15f).coerceIn(-1.2f, 1.2f)
+                    tiltY = (event.values[0] * 0.15f).coerceIn(-1.2f, 1.2f)
+                } else {
+                    tiltX = 0f
+                    tiltY = 0f
+                }
             }
         }
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -947,6 +952,9 @@ class FelicityVisualizer @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (!VisualizerPreferences.isTouchPhysicsEnabled()) {
+            return super.onTouchEvent(event)
+        }
         if (event.action == MotionEvent.ACTION_DOWN || event.action == MotionEvent.ACTION_MOVE) {
             emitTouchBurst(event.x, event.y, if (event.action == MotionEvent.ACTION_DOWN) 16 else 4)
             return true

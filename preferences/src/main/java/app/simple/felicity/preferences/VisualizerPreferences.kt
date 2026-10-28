@@ -86,6 +86,9 @@ object VisualizerPreferences {
     }
 
     const val BATTERY_SAVER_3D = "battery_saver_3d"
+    const val GYROSCOPE_ENABLED = "visualizer_gyroscope_enabled"
+    const val BEAT_CAM_ENABLED = "visualizer_beatcam_enabled"
+    const val TOUCH_PHYSICS_ENABLED = "visualizer_touch_physics_enabled"
 
     fun set3dBatterySaverEnabled(enabled: Boolean) {
         SharedPreferences.getSharedPreferences().edit {
@@ -96,5 +99,38 @@ object VisualizerPreferences {
     fun is3dBatterySaverEnabled(): Boolean {
         return SharedPreferences.getSharedPreferences()
             .getBoolean(BATTERY_SAVER_3D, false)
+    }
+
+    fun setGyroscopeEnabled(enabled: Boolean) {
+        SharedPreferences.getSharedPreferences().edit {
+            putBoolean(GYROSCOPE_ENABLED, enabled)
+        }
+    }
+
+    fun isGyroscopeEnabled(): Boolean {
+        return SharedPreferences.getSharedPreferences()
+            .getBoolean(GYROSCOPE_ENABLED, true)
+    }
+
+    fun setBeatCamEnabled(enabled: Boolean) {
+        SharedPreferences.getSharedPreferences().edit {
+            putBoolean(BEAT_CAM_ENABLED, enabled)
+        }
+    }
+
+    fun isBeatCamEnabled(): Boolean {
+        return SharedPreferences.getSharedPreferences()
+            .getBoolean(BEAT_CAM_ENABLED, true)
+    }
+
+    fun setTouchPhysicsEnabled(enabled: Boolean) {
+        SharedPreferences.getSharedPreferences().edit {
+            putBoolean(TOUCH_PHYSICS_ENABLED, enabled)
+        }
+    }
+
+    fun isTouchPhysicsEnabled(): Boolean {
+        return SharedPreferences.getSharedPreferences()
+            .getBoolean(TOUCH_PHYSICS_ENABLED, true)
     }
 }

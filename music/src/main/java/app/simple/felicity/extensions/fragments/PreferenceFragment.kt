@@ -1428,6 +1428,45 @@ abstract class PreferenceFragment : MediaFragment() {
                 }
         )
 
+        val gyroscopeParallax = Preference(
+                title = R.string.gyroscope_mode,
+                summary = R.string.gyroscope_parallax_summary,
+                icon = R.drawable.ic_animation,
+                type = PreferenceType.SWITCH,
+                onPreferenceAction = { view, _ ->
+                    VisualizerPreferences.setGyroscopeEnabled((view as FelicitySwitch).isChecked)
+                },
+                valueProvider = Supplier {
+                    VisualizerPreferences.isGyroscopeEnabled()
+                }
+        )
+
+        val beatCam = Preference(
+                title = R.string.beat_cam,
+                summary = R.string.beat_cam_summary,
+                icon = R.drawable.ic_equalizer_16dp,
+                type = PreferenceType.SWITCH,
+                onPreferenceAction = { view, _ ->
+                    VisualizerPreferences.setBeatCamEnabled((view as FelicitySwitch).isChecked)
+                },
+                valueProvider = Supplier {
+                    VisualizerPreferences.isBeatCamEnabled()
+                }
+        )
+
+        val touchPhysics = Preference(
+                title = R.string.touch_physics,
+                summary = R.string.touch_physics_summary,
+                icon = R.drawable.ic_waves,
+                type = PreferenceType.SWITCH,
+                onPreferenceAction = { view, _ ->
+                    VisualizerPreferences.setTouchPhysicsEnabled((view as FelicitySwitch).isChecked)
+                },
+                valueProvider = Supplier {
+                    VisualizerPreferences.isTouchPhysicsEnabled()
+                }
+        )
+
         preferences.add(userInterfaceHeader)
         preferences.add(divider)
         preferences.add(highlightClickedElement)
@@ -1438,6 +1477,9 @@ abstract class PreferenceFragment : MediaFragment() {
         preferences.add(animationsHeader)
         preferences.add(reduceAnimations)
         preferences.add(batterySaver3d)
+        preferences.add(gyroscopeParallax)
+        preferences.add(beatCam)
+        preferences.add(touchPhysics)
 
         return preferences
     }
