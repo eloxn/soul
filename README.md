@@ -52,8 +52,8 @@ Soul is **100% free and open-source** — no subscriptions, no ads, no paywalls,
 - **Advanced Sound Effects:** Built-in Bass Boost, Treble adjustment, Reverb, Stereo Widening, and Tape Saturation for an authentic analog warmth.
 - **Gapless & Smart Crossfade:** Uninterrupted transitions between tracks with customizable crossfade easing curves (0–12s).
 - **3D & Canvas Visualizers:**
-  - Custom GLSL Shader Sandbox with real-time fragment compiler and audio-reactive uniforms.
-  - Gyroscope Parallax, Orbit turntable mode, and Beat-Cam transient response.
+  - Gyroscope Parallax (3D tilt) and Beat-Cam kick-reactive dynamics.
+  - Interactive Touch & Particle Physics emitting momentum bursts on touch.
   - Intelligent 3D Battery Saver capping frame rates and scaling resolution dynamically.
   - Real-time Milkdrop visualizer and ultra-fast Canvas spectrum powered by PFFFT.
 

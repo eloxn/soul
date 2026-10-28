@@ -557,9 +557,6 @@
     <string name="tap_to_sync">Tap to Sync</string>
     <string name="tap_to_sync_summary">Tap along with the beat to record timestamps line by line in real-time.</string>
     <string name="export_yaml">Export LRCLIB YAML</string>
-    <string name="shader_sandbox">GLSL Shader Sandbox</string>
-    <string name="shader_sandbox_summary">Custom real-time GLSL fragment shaders reacting to audio spectrum uniforms.</string>
-    <string name="orbit_mode">Orbit Mode</string>
     <string name="beat_cam">Beat-Cam Dynamic Shake</string>
     <string name="beat_cam_summary">Dynamic focal zoom and transient shake reactive to heavy bass kicks.</string>
     <string name="gyroscope_mode">Gyroscope Parallax (3D Tilt)</string>
